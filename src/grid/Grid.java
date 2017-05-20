@@ -8,8 +8,35 @@ import java.util.*;
  * A 9x9 grid for sudoku puzzles. Each element holds a number between 0 and 9 inclusive (0 represents no value).
  */
 public class Grid {
+  /**
+   * Stores the values in each square of the grid as a number between 0 and 9 inclusive (0 represents an unknown value).
+   */
   private final int[][] grid = new int[9][9];
-  private List<Set<Integer>> domainGrid = new ArrayList<>(Collections.nCopies(9 * 9, new TreeSet<>()));
+
+  private boolean[][] fixedGrid = new boolean[9][9];
+
+  /**
+   * Stores the fixed values in each column of the sudoku grid (where the first element in the list
+   * corresponds to the top row and the last element corresponds to the bottom row).
+   */
+  private List<Set<Integer>> rowConstraints = new ArrayList<>(Arrays.asList(new TreeSet<>(), new TreeSet<>(),
+      new TreeSet<>(), new TreeSet<>(), new TreeSet<>(), new TreeSet<>(), new TreeSet<>(), new TreeSet<>(), new TreeSet<>()));
+
+  /**
+   * Stores the fixed values in each column of the sudoku grid (where the first element in the list
+   * corresponds to the left column and the last element corresponds to the right column).
+   */
+  private List<Set<Integer>> colConstraints = new ArrayList<>(Arrays.asList(new TreeSet<>(), new TreeSet<>(),
+      new TreeSet<>(), new TreeSet<>(), new TreeSet<>(), new TreeSet<>(), new TreeSet<>(), new TreeSet<>(), new TreeSet<>()));
+
+  /**
+   * Stores the fixed values in each 3 by 3 box in the sudoku grid (where the first element in the list corresponds
+   * to the top-left box, the second element corresponds to the top-center box, and so on).
+   */
+  private List<Set<Integer>> boxConstraints = new ArrayList<>(Arrays.asList(new TreeSet<>(), new TreeSet<>(),
+      new TreeSet<>(), new TreeSet<>(), new TreeSet<>(), new TreeSet<>(), new TreeSet<>(), new TreeSet<>(), new TreeSet<>()));
+
+//  private List<Set<Integer>> domainGrid = new ArrayList<>(Collections.nCopies(9 * 9, new TreeSet<>()));
 
   /**
    * Creates an empty sudoku grid.
@@ -18,7 +45,8 @@ public class Grid {
     for (int r = 0; r < 9; r++) {
       for (int c = 0; c < 9; c++) {
         grid[r][c] = 0;
-        domainGrid.set(r * 9 + c, new TreeSet<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9)));
+        fixedGrid[r][c] = false;
+//        domainGrid.set(r * 9 + c, new TreeSet<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9)));
       }
     }
   }
@@ -36,9 +64,14 @@ public class Grid {
       for (int c = 0; c < 9; c++) {
         grid[r][c] = initialGrid[r][c];
         if (initialGrid[r][c] == 0) {
-          domainGrid.set(r * 9 + c, new TreeSet<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9)));
+          fixedGrid[r][c] = false;
+//          domainGrid.set(r * 9 + c, new TreeSet<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9)));
         } else {
-          domainGrid.set(r * 9 + c, new TreeSet<>(Collections.singletonList(initialGrid[r][c])));
+          rowConstraints.get(r).add(grid[r][c]);
+          colConstraints.get(c).add(grid[r][c]);
+          boxConstraints.get(r / 3 * 3 + c / 3).add(grid[r][c]);
+          fixedGrid[r][c] = true;
+//          domainGrid.set(r * 9 + c, new TreeSet<>(Collections.singletonList(initialGrid[r][c])));
         }
       }
     }
@@ -49,38 +82,39 @@ public class Grid {
   }
 
   public void solve() {
-    scan();
-  }
-
-  private void scan() {
-//    boolean flag = true; // need a flag that checks whether constrain(r, c) has already been called (a new 2d array of booleans??)
-//    while (flag) {
-//      flag = false;
+    boolean flag = true; // need a flag that checks whether constrain(r, c) has already been called (a new 2d array of booleans??)
+    while (flag) {
+      flag = false;
       // Scan each element.
       for (int r = 0; r < 9; r++) {
         for (int c = 0; c < 9; c++) {
-          if (domainGrid.get(r * 9 + c).size() == 1) {
+//          if (domainGrid.get(r * 9 + c).size() == 1) {
+          Set<Integer> values = domain(r, c);
+          // Ignore fixed values.
+          if (!fixedGrid[r][c] && values.size() == 1) {
             // The element is fixed to a single value.
-            Integer[] dummyArray = new Integer[] {};
-            grid[r][c] = domainGrid.get(r * 9 + c).toArray(dummyArray)[0];
+            Integer[] dummyArray = new Integer[]{};
+//            grid[r][c] = domainGrid.get(r * 9 + c).toArray(dummyArray)[0];
+            grid[r][c] = values.toArray(dummyArray)[0];
             System.out.println("grid[" + r + "][" + c + "] is constrained to one value: " + grid[r][c]);
             System.out.println("Update to grid:");
             System.out.println(printGrid());
             constrain(r, c);
-//            flag = true;
+            flag = true;
           }
         }
       }
-//    }
+    }
     printDomains();
-    resolve();
+//    resolve();
   }
 
   private void printDomains() {
     for (int r = 0; r < 9; r++) {
       for (int c = 0; c < 9; c++) {
         StringBuilder sb = new StringBuilder("grid[" + r + "][" + c + "] is constrained to the value(s): ");
-        Object[] values = domainGrid.get(r * 9 + c).toArray();
+//        Object[] values = domainGrid.get(r * 9 + c).toArray();
+        Object[] values = domain(r, c).toArray();
         for (int i = 0; i < values.length; i++) {
           sb.append(values[i].toString());
           if (i != values.length - 1) {
@@ -92,6 +126,52 @@ public class Grid {
     }
   }
 
+  private void printConstraints() {
+    StringBuilder sb = new StringBuilder("");
+    for (int r = 0; r < 9; r++) {
+      sb.append("Row ");
+      sb.append(r);
+      sb.append(" constraints: ");
+      Object[] values = rowConstraints.get(r).toArray();
+      for (int i = 0; i < values.length; i++) {
+        sb.append(values[i].toString());
+        if (i != values.length - 1) {
+          sb.append(", ");
+        }
+      }
+      sb.append('\n');
+    }
+
+    for (int c = 0; c < 9; c++) {
+      sb.append("Column ");
+      sb.append(c);
+      sb.append(" constraints: ");
+      Object[] values = colConstraints.get(c).toArray();
+      for (int i = 0; i < values.length; i++) {
+        sb.append(values[i].toString());
+        if (i != values.length - 1) {
+          sb.append(", ");
+        }
+      }
+      sb.append('\n');
+    }
+
+    for (int b = 0; b < 9; b++) {
+      sb.append("Box ");
+      sb.append(b);
+      sb.append(" constraints: ");
+      Object[] values = boxConstraints.get(b).toArray();
+      for (int i = 0; i < values.length; i++) {
+        sb.append(values[i].toString());
+        if (i != values.length - 1) {
+          sb.append(", ");
+        }
+      }
+      sb.append('\n');
+    }
+    System.out.println(sb.toString());
+  }
+
   /**
    * Propagates the constrained element to constrain other elements.
    * @param row the row index of the constrained element
@@ -101,26 +181,48 @@ public class Grid {
     if (grid[row][col] < 1 || grid[row][col] > 9) {
       System.out.println("Invalid value! (must be between 1 and 9)");
       return;
-    } else if (domainGrid.get(row * 9 + col).size() != 1 || !domainGrid.get(row * 9 + col).contains(grid[row][col])) {
-      System.out.println("Invalid element! (must be constrained to only the value)");
-      return;
-    }
-
-    for (int r = 0; r < 9; r++) {
-      for (int c = 0; c < 9; c++) {
-        // Skip if this element is the element that we're propagating from,
-        // otherwise if this element is in the same row, column, or 3x3 box, constrain the element.
-        if (!(r == row && c == col) && (r == row || c == col || (row / 3 == r / 3 && col / 3 == c / 3))) {
-          domainGrid.get(r * 9 + c).remove(grid[row][col]);
-        }
+    } else if (fixedGrid[row][col]) {
+      System.out.println("Invalid element! (must not be a fixed element)");
+    } else {
+      Set<Integer> values = domain(row, col);
+      if (values.size() != 1) {
+        System.out.println("Invalid element! (its value must be the only unconstrained value)");
+        return;
+      } else if (!values.contains(grid[row][col])) {
+        System.out.println("Invalid element! (its value must be an unconstrained value)");
+        return;
       }
     }
+
+    rowConstraints.get(row).add(grid[row][col]);
+    colConstraints.get(col).add(grid[row][col]);
+    boxConstraints.get(row / 3 * 3 + col / 3).add(grid[row][col]);
+    fixedGrid[row][col] = true; // Prevents the scan from trying to constrain this value again.
+
+//    for (int r = 0; r < 9; r++) {
+//      for (int c = 0; c < 9; c++) {
+//        // Skip if this element is the element that we're propagating from,
+//        // otherwise if this element is in the same row, column, or 3x3 box, constrain the element.
+//        if (!(r == row && c == col) && (r == row || c == col || (row / 3 == r / 3 && col / 3 == c / 3))) {
+//          domainGrid.get(r * 9 + c).remove(grid[row][col]);
+//        }
+//      }
+//    }
   }
 
   // looks in each row, col, box and tries to place the number (e.g. if 1 only appears in a single variable domain in the
   // row/col/box, then it places the 1 there)
   private void resolve() {
 
+  }
+
+  // calculates the variable domain of the square at (i, j) using the saved row, column, and box constraints
+  private Set<Integer> domain(int r, int c) {
+    Set<Integer> values = new TreeSet<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9));
+    values.removeAll(rowConstraints.get(r));
+    values.removeAll(colConstraints.get(c));
+    values.removeAll(boxConstraints.get(r / 3 * 3 + c / 3));
+    return values;
   }
 
   /**
@@ -153,7 +255,7 @@ public class Grid {
    * of the numbers between 1 and 9 inclusive).
    * @return  whether the sudoku grid satisfies the constraints
    */
-  boolean checkConstraints() {
+  private boolean checkConstraints() {
     return checkRowConstraints() && checkColConstraints() && checkBoxConstraints();
   }
 
@@ -265,20 +367,38 @@ public class Grid {
     System.out.println(g3.printGrid());
     System.out.println("checkConstraints() = " + g3.checkConstraints());
 
-    int[][] partiallyFilledGrid = {
-        {0, 0, 0, 2, 0, 5, 0, 0, 0},
-        {0, 9, 0, 0, 0, 0, 7, 3, 0},
-        {0, 0, 2, 0, 0, 9, 0, 6, 0},
-        {2, 0, 0, 0, 0, 0, 4, 0, 9},
-        {0, 0, 0, 0, 7, 0, 0, 0, 0},
-        {6, 0, 9, 0, 0, 0, 0, 0, 1},
-        {0, 8, 0, 4, 0, 0, 1, 0, 0},
-        {0, 6, 3, 0, 0, 0, 0, 8, 0},
-        {0, 0, 0, 6, 0, 8, 0, 0, 0}
+    int[][] sudokuEx1 = {
+        {0, 0, 0, 0, 0, 5, 0, 0, 7},
+        {7, 0, 0, 0, 8, 9, 1, 0, 3},
+        {0, 9, 2, 7, 0, 0, 0, 0, 5},
+        {0, 0, 0, 2, 4, 7, 0, 0, 1},
+        {0, 0, 5, 0, 0, 0, 9, 0, 0},
+        {0, 2, 8, 9, 0, 0, 6, 0, 0},
+        {2, 0, 9, 1, 0, 0, 3, 0, 0},
+        {3, 4, 6, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0}
     };
-    Grid g4 = new Grid(partiallyFilledGrid);
+    Grid g4 = new Grid(sudokuEx1);
     System.out.println(g4.printGrid());
     System.out.println("checkConstraints() = " + g4.checkConstraints());
+    g4.printConstraints();
     g4.solve();
+
+//    int[][] partiallyFilledGrid = {
+//        {0, 0, 0, 2, 0, 5, 0, 0, 0},
+//        {0, 9, 0, 0, 0, 0, 7, 3, 0},
+//        {0, 0, 2, 0, 0, 9, 0, 6, 0},
+//        {2, 0, 0, 0, 0, 0, 4, 0, 9},
+//        {0, 0, 0, 0, 7, 0, 0, 0, 0},
+//        {6, 0, 9, 0, 0, 0, 0, 0, 1},
+//        {0, 8, 0, 4, 0, 0, 1, 0, 0},
+//        {0, 6, 3, 0, 0, 0, 0, 8, 0},
+//        {0, 0, 0, 6, 0, 8, 0, 0, 0}
+//    };
+//    Grid g5 = new Grid(partiallyFilledGrid);
+//    System.out.println(g5.printGrid());
+//    System.out.println("checkConstraints() = " + g5.checkConstraints());
+//    g5.printConstraints();
+//    g5.solve();
   }
 }
