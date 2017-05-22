@@ -82,19 +82,18 @@ public class Grid {
   }
 
   public void solve() {
-    boolean flag = true; // need a flag that checks whether constrain(r, c) has already been called (a new 2d array of booleans??)
+    boolean flag = true; // whether a value was fixed in this pass (if not, terminate)
     while (flag) {
       flag = false;
-      // Scan each element.
+      // Resolve "each element in the same row, column, and box must be different" constraint by removing values from
+      // variable domains (e.g. if a fixed value of 1 appears, remove 1 from all domains in the same column, row, and box).
       for (int r = 0; r < 9; r++) {
         for (int c = 0; c < 9; c++) {
-//          if (domainGrid.get(r * 9 + c).size() == 1) {
           Set<Integer> values = domain(r, c);
-          // Ignore fixed values.
+          // Ignore previously fixed values.
           if (!fixedGrid[r][c] && values.size() == 1) {
             // The element is fixed to a single value.
             Integer[] dummyArray = new Integer[]{};
-//            grid[r][c] = domainGrid.get(r * 9 + c).toArray(dummyArray)[0];
             grid[r][c] = values.toArray(dummyArray)[0];
             System.out.println("grid[" + r + "][" + c + "] is constrained to one value: " + grid[r][c]);
             System.out.println("Update to grid:");
@@ -104,9 +103,67 @@ public class Grid {
           }
         }
       }
+
+      // Resolve "each value must appear at least once in each row, column, and box" constraint by removing values from
+      // variable domains (e.g. if 1 appears in only one of the domains in a row, the domain can only contain the value 1).
+      for (int r = 0; r < 9; r++) {
+        for (int c = 0; c < 9; c++) {
+          // Ignore previously fixed values.
+          if (!fixedGrid[r][c]) {
+            Set<Integer> values = domain(r, c);
+            // Does the value occur in another domain in the same row, column, or box?
+            for (int value : values) {
+              // Check this row.
+              boolean isUniqueInRow = true;
+              int c2 = 0;
+              while (c2 < 9 && isUniqueInRow) {
+                if (c2 != c && domain(r, c2).contains(value)) {
+                  isUniqueInRow = false;
+                }
+                c2++;
+              }
+
+              // Check this column.
+              boolean isUniqueInCol = true;
+              int r2 = 0;
+              while (r2 < 9 && isUniqueInCol) {
+                if (r2 != r && domain(r2, c).contains(value)) {
+                  isUniqueInCol = false;
+                }
+                r2++;
+              }
+
+              // Check this box.
+              boolean isUniqueInBox = true;
+              int r0 = r / 3 * 3;
+              int c0 = c / 3 * 3;
+              while (r0 < (r / 3 * 3) + 3 && isUniqueInBox) {
+                while (c0 < (c / 3 * 3) + 3 && isUniqueInBox) {
+                  if (!(r0 == r && c0 == c) && domain(r0, c0).contains(value)) {
+                    isUniqueInBox = false;
+                  }
+                  c0++;
+                }
+                r0++;
+                c0 = c / 3 * 3;
+              }
+
+              // If this value can't appear anywhere else in the same column, row, or box, fix this domain only contain
+              // that value.
+              if (isUniqueInRow || isUniqueInCol || isUniqueInBox) {
+                grid[r][c] = value;
+                constrain(r, c);
+                flag = true;
+                System.out.println("grid[" + r + "][" + c + "] must take the value: " + grid[r][c]);
+                System.out.println("Update to grid:");
+                System.out.println(printGrid());
+              }
+            }
+          }
+        }
+      }
     }
     printDomains();
-//    resolve();
   }
 
   private void printDomains() {
@@ -185,11 +242,8 @@ public class Grid {
       System.out.println("Invalid element! (must not be a fixed element)");
     } else {
       Set<Integer> values = domain(row, col);
-      if (values.size() != 1) {
-        System.out.println("Invalid element! (its value must be the only unconstrained value)");
-        return;
-      } else if (!values.contains(grid[row][col])) {
-        System.out.println("Invalid element! (its value must be an unconstrained value)");
+      if (!values.contains(grid[row][col])) {
+        System.out.println("Invalid element! (its assigned value must be an unconstrained value)");
         return;
       }
     }
@@ -218,6 +272,9 @@ public class Grid {
 
   // calculates the variable domain of the square at (i, j) using the saved row, column, and box constraints
   private Set<Integer> domain(int r, int c) {
+    if (fixedGrid[r][c]) {
+      return new TreeSet<>(Collections.singletonList(grid[r][c])); // a fixed element's domain only contains the assigned value
+    }
     Set<Integer> values = new TreeSet<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9));
     values.removeAll(rowConstraints.get(r));
     values.removeAll(colConstraints.get(c));
@@ -384,21 +441,22 @@ public class Grid {
     g4.printConstraints();
     g4.solve();
 
-//    int[][] partiallyFilledGrid = {
-//        {0, 0, 0, 2, 0, 5, 0, 0, 0},
-//        {0, 9, 0, 0, 0, 0, 7, 3, 0},
-//        {0, 0, 2, 0, 0, 9, 0, 6, 0},
-//        {2, 0, 0, 0, 0, 0, 4, 0, 9},
-//        {0, 0, 0, 0, 7, 0, 0, 0, 0},
-//        {6, 0, 9, 0, 0, 0, 0, 0, 1},
-//        {0, 8, 0, 4, 0, 0, 1, 0, 0},
-//        {0, 6, 3, 0, 0, 0, 0, 8, 0},
-//        {0, 0, 0, 6, 0, 8, 0, 0, 0}
-//    };
-//    Grid g5 = new Grid(partiallyFilledGrid);
-//    System.out.println(g5.printGrid());
-//    System.out.println("checkConstraints() = " + g5.checkConstraints());
-//    g5.printConstraints();
-//    g5.solve();
+    int[][] sudokuEx2 = {
+        {0, 0, 0, 2, 0, 5, 0, 0, 0},
+        {0, 9, 0, 0, 0, 0, 7, 3, 0},
+        {0, 0, 2, 0, 0, 9, 0, 6, 0},
+        {2, 0, 0, 0, 0, 0, 4, 0, 9},
+        {0, 0, 0, 0, 7, 0, 0, 0, 0},
+        {6, 0, 9, 0, 0, 0, 0, 0, 1},
+        {0, 8, 0, 4, 0, 0, 1, 0, 0},
+        {0, 6, 3, 0, 0, 0, 0, 8, 0},
+        {0, 0, 0, 6, 0, 8, 0, 0, 0}
+    };
+    Grid g5 = new Grid(sudokuEx2);
+    System.out.println(g5.printGrid());
+    System.out.println("checkConstraints() = " + g5.checkConstraints());
+    g5.printConstraints();
+    g5.solve();
+    g5.printGrid();
   }
 }
