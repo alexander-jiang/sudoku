@@ -458,5 +458,23 @@ public class Grid {
     g5.printConstraints();
     g5.solve();
     g5.printGrid();
+
+    int[][] sudokuEx3 = {
+        {0, 0, 0, 1, 5, 0, 0, 0, 3},
+        {7, 0, 4, 0, 0, 0, 1, 0, 0},
+        {0, 0, 0, 0, 0, 2, 7, 6, 0},
+        {0, 7, 0, 9, 0, 0, 0, 2, 0},
+        {0, 0, 0, 8, 0, 6, 0, 0, 0},
+        {0, 9, 0, 0, 0, 5, 0, 4, 0},
+        {0, 3, 5, 2, 0, 0, 0, 0, 0},
+        {0, 0, 7, 0, 0, 0, 2, 0, 1},
+        {2, 0, 0, 0, 9, 1, 0, 0, 0}
+    };
+    Grid g6 = new Grid(sudokuEx3);
+    System.out.println(g6.printGrid());
+    System.out.println("checkConstraints() = " + g6.checkConstraints());
+    g6.printConstraints();
+    g6.solve();
+    g6.printGrid();
   }
 }

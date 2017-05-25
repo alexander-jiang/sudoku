@@ -1,0 +1,64 @@
+This is a to-do list / design description for the sudoku solver.
+
+Basic functionality already (kinda) exists in that:
+There is a representation of a Sudoku grid (specifically, only the standard 9x9 grid).
+There is an ability to "solve" the puzzle (though the solver sometimes gets stuck on difficult puzzles).
+There is an ability to display this representation of the grid (by printing to console).
+
+Next steps:
+1. Decouple the grid representation from the solver representation.
+    a. Write interfaces that abstract the common behaviors that the respective objects must have
+    (e.g. grids must expose their elements' values and candidates, solvers must be able to solve).
+        i. ISquareSudokuGrid will be the interface for the standard 9x9 Sudoku grid.
+        To keep it simple yet still build in some interesting extensibility, we'll only consider
+        Sudoku variants which consist of a square grid that is N by N, split into N square sub-regions
+        (the "boxes") that are each sqrt(N) by sqrt(N), where the rules are that, for each of the
+        N columns, rows, and boxes, each element in the group (a row, column, or box) must be filled in
+        with a single value that is a number 1, ..., N such that each of the N numbers appears exactly
+        once in that group. Thus for N = 9, this creates the standard 9x9 Sudoku grid.
+
+        The methods for ISquareSudokuGrid:
+
+        int getDimension()
+        Returns the value N, which is the number of elements in each group (i.e. row, column, and box).
+        Note that N must be a positive perfect square.
+
+        int getValue(int i, int j)
+        Returns the value in the element in the i-th row and j-th column of the grid. If no value has
+        been assigned yet, returns 0. Otherwise, it must return a value between 1 and N inclusive.
+
+        void setValue(int i, int j, int newValue)
+        Updates the grid so that the element at (i, j) in the grid now has a value of newValue.
+        newValue must be between 1 and N inclusive.
+
+        Pair<Integer, Integer> getBoxCoordinates(int i, int j)
+        Returns the row-major coordinates of the box that contains the element at (i, j) in the grid.
+        The two integers in the ordered pair must be between 0 and sqrt(N) - 1 inclusive.
+
+        List<Pair<Integer, Integer>> getRowElements(int i, int j)
+        Returns the row-major coordinates of the N elements in the same row as the element at (i, j)
+        in the grid (including the element at (i, j)).
+
+        List<Pair<Integer, Integer>> getColumnElements(int i, int j)
+        Returns the row-major coordinates of the N elements in the same column as the element at (i, j)
+        in the grid (including the element at (i, j)).
+
+        List<Pair<Integer, Integer>> getBoxElements(int i, int j)
+        Returns the row-major coordinates of the N elements in the same box as the element at (i, j)
+        in the grid (including the element at (i, j)).
+
+        boolean isACandidate(int i, int j, int value)
+        Returns whether the value is marked as a candidate for the element at (i, j). value must
+        be between 1 and N inclusive.
+
+        void setCandidate(int i, int j, int value, boolean isCandidate)
+        Updates the grid so that the element at (i, j) in the grid either has value as a candidate
+        or does not have value as a candidate, depending on if isCandidate is true or false, respectively.
+        value must be between 1 and N inclusive.
+
+        boolean isFixed(int i, int j)
+        Returns whether the element has been assigned a "final" value, meaning that only one candidate
+        value remains.
+
+        ii. ISolver will be the interface for solvers. Its methods will be:
+        void solve(
