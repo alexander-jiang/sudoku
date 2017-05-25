@@ -60,5 +60,20 @@ Next steps:
         Returns whether the element has been assigned a "final" value, meaning that only one candidate
         value remains.
 
-        ii. ISolver will be the interface for solvers. Its methods will be:
-        void solve(
+        ii. ISquareSudokuSolver will be the interface for solvers (again, only considering square variants
+        of Sudoku). Its methods will be:
+
+        int solve(ISquareSudokuGrid grid)
+        Attempts to solve the given grid. Returns 0 if a complete solution is found (every square has been
+        assigned a fixed value such that the constraints are satisfied). Returns 1 if the solver gets stuck.
+        Returns -1 if the puzzle is not solvable (i.e. the given values violate a constraint or prevent
+        other elements from abiding by the constraints).
+
+2. Create a nice looking GUI for the Sudoku grid (more decoupling!) with an MVC architecture.
+The ISquareSudokuGrid is the "model" and there will be some GUI frame (probably a JFrame since that's what
+I'm familiar with) as the "view". There will be adapters in both directions: model-to-view (e.g. to update
+the displayed values and candidate values in the grid) and view-to-model (e.g. loading a Sudoku puzzle from
+disk or starting a timer). The "controller" just puts these pieces together.
+
+3. More GUI features! Highlighting a row, column, box, all instances of a value, or a candidate value in an
+element in the grid. This can help visualize the solver's "justification" for its actions.
