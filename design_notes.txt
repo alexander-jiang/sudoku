@@ -75,5 +75,28 @@ I'm familiar with) as the "view". There will be adapters in both directions: mod
 the displayed values and candidate values in the grid) and view-to-model (e.g. loading a Sudoku puzzle from
 disk or starting a timer). The "controller" just puts these pieces together.
 
+This GUI will help a lot with visualizing the solver's actions (as you'll be able to see the candidate
+values directly), and it provides an interface for the user to solve puzzles manually.
+    a. Loading Sudoku puzzles from files. File specification will probably be pretty easy: first line has
+    one number: N (the number of elements in each group). Then N lines of N numbers each follow, each
+    corresponding to a row in the grid.
+
+    b. Saving Sudoku puzzles (in progress) to files. A little more tricky, as you'd have to encode the
+    candidate values for each square.
+
+    c. Undo functionality? Could be helpful, but not super critical. Just don't mess up :)
+
+    d. Show/hide all candidate values
+
+    e. Auto-update candidate values.
+
 3. More GUI features! Highlighting a row, column, box, all instances of a value, or a candidate value in an
 element in the grid. This can help visualize the solver's "justification" for its actions.
+
+4. Analysis of properties of a Sudoku puzzle:
+    a. Proper: Is there a unique solution?
+    b. Minimal / Irreducible: If the puzzle is proper, could you remove a given value without compromising
+    the uniqueness of the solution?
+    c. Symmetry
+
+5. Generating new Sudoku puzzles based on certain parameters (e.g. starting number of clues, symmetry, etc.)
