@@ -1,8 +1,9 @@
-package grid.model;
+package main.grid.model;
 
-import util.Pair;
+import main.util.Pair;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Interface for grids of square Sudoku variants.
@@ -89,6 +90,14 @@ public interface ISquareSudokuGrid {
   boolean isACandidate(int i, int j, int value);
 
   /**
+   * Returns a set of candidate values for the element at (i, j) in the grid.
+   * @param i the row coordinate of the element in the grid
+   * @param j the column coordinate of the element in the grid
+   * @return  a set containing all candidate values for the given element
+   */
+  Set<Integer> getCandidateValues(int i, int j);
+
+  /**
    * Updates the grid so that the element at (i, j) in the grid either has value as a candidate
    * or does not have value as a candidate, depending on if isCandidate is true or false, respectively.
    * value must be between 1 and N inclusive.
@@ -107,4 +116,10 @@ public interface ISquareSudokuGrid {
    * @return  whether the element has been assigned a value
    */
   boolean isFixed(int i, int j);
+
+  /**
+   * Returns a string representation of the Sudoku grid.
+   * @return  a human-readable representation of the grid.
+   */
+  String gridToString();
 }

@@ -1,4 +1,4 @@
-package util;
+package main.util;
 
 /**
  * Utility class to represent an ordered pair.
