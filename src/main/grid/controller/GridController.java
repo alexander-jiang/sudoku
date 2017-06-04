@@ -61,7 +61,7 @@ public class GridController {
 
       @Override
       public void updateGridCandidateValue(int i, int j, int candidateValue, boolean isCandidate) {
-        System.out.println("Not implemented!");
+        model.getGrid().setCandidate(i, j, candidateValue, isCandidate);
       }
 
       @Override

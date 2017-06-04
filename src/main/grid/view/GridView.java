@@ -24,7 +24,7 @@ public class GridView extends JFrame {
   }
 
   public void start() {
-    setVisible(true);
+//    setVisible(true);
   }
 
   public void waitForInput() {
@@ -53,7 +53,10 @@ public class GridView extends JFrame {
         System.out.println("Enter the row and column coordinates to see the candidate values at those coordinates");
         String line = inputReader.nextLine();
         String[] tokens = line.split("\\s*,\\s*");
-        Set<Integer> candidates = model.getCandidateValues(Integer.parseInt(tokens[0]), Integer.parseInt(tokens[1]));
+        int i = Integer.parseInt(tokens[0]);
+        int j = Integer.parseInt(tokens[1]);
+        Set<Integer> candidates = model.getCandidateValues(i, j);
+        System.out.print("Candidate values for (" + i + ", " + j + "): ");
         for (int value : candidates) {
           System.out.print(value + " ");
         }

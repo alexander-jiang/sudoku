@@ -11,11 +11,6 @@ import java.util.Set;
  * <p>In other words, the grid has N rows and N columns and is further
  * subdivided into N square sub-regions ("boxes"). Note that this means N
  * (the "dimension" of the grid) must be a positive perfect square.</p>
- *
- * <p>The grid must be filled in such that each element of the grid contains
- * exactly one number between 1 and N inclusive. Further, each row, column,
- * and box must contain each of the numbers between 1 and N inclusive exactly
- * once. A grid that is filled in this manner is a "solved" grid.</p>
  */
 public interface ISquareSudokuGrid {
   /**
