@@ -14,6 +14,14 @@ public class GridModel {
   }
 
   public void start() {
+    view.updateDisplayGrid();
+  }
 
+  public ISquareSudokuGrid getGrid() {
+    return grid;
+  }
+
+  public IViewAdapter getViewAdapter() {
+    return view;
   }
 }

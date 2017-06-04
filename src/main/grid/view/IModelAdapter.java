@@ -1,5 +1,7 @@
 package main.grid.view;
 
+import java.util.Set;
+
 /**
  * The adapter that allows the view to talk to the model.
  */
@@ -21,4 +23,11 @@ public interface IModelAdapter {
    * @param isCandidate whether the value should be displayed as a candidate or not
    */
   void updateGridCandidateValue(int i, int j, int candidateValue, boolean isCandidate);
+
+  /**
+   * Tells the model to return the candidate values for the given grid element.
+   * @param i the row coordinate of the element in the grid
+   * @param j the column coordinate of the element in the grid
+   */
+  Set<Integer> getCandidateValues(int i, int j);
 }
