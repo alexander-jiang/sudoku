@@ -2,10 +2,7 @@ package main.grid.model;
 
 import main.util.Pair;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * Representation of a standard, 9x9 Sudoku main.grid.
@@ -96,6 +93,11 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
 
   @Override
   public Set<Integer> getCandidateValues(int i, int j) {
+    // A fixed element should have only one candidate value: the element's value in the grid.
+    if (isFixed(i, j)) {
+      return new TreeSet<>(Collections.singleton(getValue(i, j)));
+    }
+
     Set<Integer> candidateValues = new TreeSet<>();
     for (int value = 1; value <= 9; value++) {
       if (isACandidate(i, j, value)) {
