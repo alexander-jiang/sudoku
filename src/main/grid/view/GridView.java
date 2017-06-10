@@ -1,5 +1,7 @@
 package main.grid.view;
 
+import main.util.DisplayStrings;
+
 import javax.swing.*;
 import java.util.Scanner;
 import java.util.Set;
@@ -57,10 +59,7 @@ public class GridView extends JFrame {
         int j = Integer.parseInt(tokens[1]);
         Set<Integer> candidates = model.getCandidateValues(i, j);
         System.out.print("Candidate values for (" + i + ", " + j + "): ");
-        for (int value : candidates) {
-          System.out.print(value + " ");
-        }
-        System.out.print("\n");
+        System.out.println(DisplayStrings.setToString(candidates));
       } else if (option == 0) {
         break;
       }

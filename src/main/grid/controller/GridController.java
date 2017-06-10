@@ -40,16 +40,6 @@ public class GridController {
       public void updateDisplayGrid() {
         System.out.println(model.getGrid().gridToString());
       }
-
-      @Override
-      public void updateDisplayValue(int i, int j, int newValue) {
-        System.out.println("Not implemented!");
-      }
-
-      @Override
-      public void updateDisplayCandidateValue(int i, int j, int candidateValue, boolean isCandidate) {
-        System.out.println("Not implemented!");
-      }
     });
 
     view = new GridView(new IModelAdapter() {
