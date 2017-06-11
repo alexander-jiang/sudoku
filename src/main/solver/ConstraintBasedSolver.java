@@ -111,7 +111,28 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
               checkForHiddenSingle(grid, r, c, grid.getBoxElements(r, c));
 
           updated = updated || elementUpdated;
+        }
+      }
+    }
+    if (updated) {
+      System.out.println("Restarting scan...");
+      return solve(grid); // Restart
+    }
 
+    // Check if the candidates for a value in a box are restricted to a specific column or row.
+    // If so, that value can't be a candidate anywhere else in that column or row.
+    updated = false;
+    for (int r = 0; r < grid.getDimension(); r += Math.sqrt(grid.getDimension())) {
+      for (int c = 0; c < grid.getDimension(); c += Math.sqrt(grid.getDimension())) {
+        for (int value = 1; value <= grid.getDimension(); value++) {
+          // Separate the checks to avoid the short-circuit caused by using the || operator.
+          if (checkForRowLockedCandidate(grid, value, grid.getBoxElements(r, c))) {
+            updated = true;
+          }
+
+          if (checkForColumnLockedCandidate(grid, value, grid.getBoxElements(r, c))) {
+            updated = true;
+          }
         }
       }
     }
@@ -150,16 +171,108 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
     } else if (candidates.size() == 1) {
       int hiddenSingle = (Integer) (candidates.toArray()[0]);
       System.out.println("Found hidden single in element (" + r + ", " + c + "): " + hiddenSingle);
-      System.out.println("Group elements and their candidate values:");
-      for (Pair<Integer, Integer> coords : groupCoordinates) {
-        System.out.println("Candidates for element (" + coords.first() + ", " + coords.second() + "): " +
-            DisplayStrings.setToString(grid.getCandidateValues(coords.first(), coords.second())));
-      }
-      grid = constrain(grid, r, c, hiddenSingle);
+//      System.out.println("Group elements and their candidate values:");
+//      for (Pair<Integer, Integer> coords : groupCoordinates) {
+//        System.out.println("Candidates for element (" + coords.first() + ", " + coords.second() + "): " +
+//            DisplayStrings.setToString(grid.getCandidateValues(coords.first(), coords.second())));
+//      }
+      constrain(grid, r, c, hiddenSingle);
       return true;
     } else {
       return false;
     }
+  }
+
+  private boolean checkForRowLockedCandidate(ISquareSudokuGrid grid,
+                                             int value,
+                                             List<Pair<Integer, Integer>> boxElements) {
+    boolean inARow = false;
+    int lockedRow = -1;
+    Pair<Integer, Integer> boxCoordinates = new Pair<>(-1, -1);
+    for (Pair<Integer, Integer> coord : boxElements) {
+      // If this value is already fixed in this box, this check is invalid.
+      if (grid.isFixed(coord.first(), coord.second()) && grid.getValue(coord.first(), coord.second()) == value) {
+        return false;
+      }
+
+      // Check if the value is a candidate in this row (ignoring multiple occurrences in the same row).
+      if (grid.isACandidate(coord.first(), coord.second(), value) && lockedRow != coord.first()) {
+        if (!inARow) {
+          inARow = true;
+          lockedRow = coord.first();
+        } else {
+          return false; // Found in more than one row.
+        }
+      }
+      boxCoordinates = grid.getBoxCoordinates(coord.first(), coord.second());
+    }
+
+    // If control reaches here, means that this value is restricted to a single row in this box.
+    System.out.println("Found locked candidate in box (" + boxCoordinates.first() + ", " + boxCoordinates.second() +
+        "), row = " + lockedRow + ": " + value);
+//    System.out.println("Box elements and their candidate values:");
+//    for (Pair<Integer, Integer> coords : boxElements) {
+//      System.out.println("Candidates for element (" + coords.first() + ", " + coords.second() + "): " +
+//          DisplayStrings.setToString(grid.getCandidateValues(coords.first(), coords.second())));
+//    }
+    boolean updated = false;
+    for (int c = 0; c < grid.getDimension(); c++) {
+      // Don't constrain the elements in the same box.
+      if (!grid.getBoxCoordinates(lockedRow, c).equals(boxCoordinates)) {
+        if (grid.isACandidate(lockedRow, c, value)) {
+          grid.setCandidate(lockedRow, c, value, false);
+          updated = true;
+          System.out.println("Removed " + value + " as a candidate from element (" + lockedRow + ", " + c + ")");
+        }
+      }
+    }
+    return updated;
+  }
+
+  private boolean checkForColumnLockedCandidate(ISquareSudokuGrid grid,
+                                                int value,
+                                                List<Pair<Integer, Integer>> boxElements) {
+    boolean inAColumn = false;
+    int lockedColumn = -1;
+    Pair<Integer, Integer> boxCoordinates = new Pair<>(-1, -1);
+    for (Pair<Integer, Integer> coord : boxElements) {
+      // If this value is already fixed in this box, this check is invalid.
+      if (grid.isFixed(coord.first(), coord.second()) && grid.getValue(coord.first(), coord.second()) == value) {
+        return false;
+      }
+
+      // Check if the value is a candidate in this row (ignoring multiple occurrences in the same row).
+      if (grid.isACandidate(coord.first(), coord.second(), value) && lockedColumn != coord.second()) {
+        if (!inAColumn) {
+          inAColumn = true;
+          lockedColumn = coord.second();
+        } else {
+          return false; // Found in more than one column.
+        }
+      }
+      boxCoordinates = grid.getBoxCoordinates(coord.first(), coord.second());
+    }
+
+    // If control reaches here, means that this value is restricted to a single row in this box.
+    System.out.println("Found locked candidate in box (" + boxCoordinates.first() + ", " + boxCoordinates.second() +
+        "), column = " + lockedColumn + ": " + value);
+//    System.out.println("Box elements and their candidate values:");
+//    for (Pair<Integer, Integer> coords : boxElements) {
+//      System.out.println("Candidates for element (" + coords.first() + ", " + coords.second() + "): " +
+//          DisplayStrings.setToString(grid.getCandidateValues(coords.first(), coords.second())));
+//    }
+    boolean updated = false;
+    for (int r = 0; r < grid.getDimension(); r++) {
+      // Don't constrain the elements in the same box.
+      if (!grid.getBoxCoordinates(r, lockedColumn).equals(boxCoordinates)) {
+        if (grid.isACandidate(r, lockedColumn, value)) {
+          grid.setCandidate(r, lockedColumn, value, false);
+          updated = true;
+          System.out.println("Removed " + value + " as a candidate from element (" + r + ", " + lockedColumn + ")");
+        }
+      }
+    }
+    return updated;
   }
 
   public static void main(String[] args) {
