@@ -87,6 +87,11 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
 
   @Override
   public boolean isACandidate(int i, int j, int value) {
+    // A fixed element should have only one candidate value: the element's value in the grid.
+    if (isFixed(i, j)) {
+      return value == getValue(i, j);
+    }
+
     int mask = 0x0001 << value; // the 2^value bit is set to 1, all other bits are set to 0.
     return (candidateSets[i][j] & mask) != 0;
   }
