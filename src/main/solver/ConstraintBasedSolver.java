@@ -82,43 +82,42 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
   public ISquareSudokuGrid solve(ISquareSudokuGrid grid) {
     // Check for elements with only one candidate value (naked single). These elements should have
     // their value set to the single candidate value.
-    boolean found = false;
+    boolean updated = false;
     for (int r = 0; r < grid.getDimension(); r++) {
       for (int c = 0; c < grid.getDimension(); c++) {
         if (grid.getCandidateValues(r, c).size() == 1 && !grid.isFixed(r, c)) {
           int nakedSingle = (Integer) (grid.getCandidateValues(r, c).toArray()[0]);
           System.out.println("Found naked single in element (" + r + ", " + c + "): " + nakedSingle);
           grid = constrain(grid, r, c, nakedSingle);
-          found = true;
+          updated = true;
         }
       }
     }
-    if (found) {
+    if (updated) {
       System.out.println("Restarting scan...");
-      grid = solve(grid); // Restart to scan from the beginning
+      return solve(grid); // Restart to scan from the beginning
     }
 
     // Check for elements which are the only element in the group (row, column, or box)
     // that contain a certain value as a candidate (hidden single).
-    found = false;
+    updated = false;
     for (int r = 0; r < grid.getDimension(); r++) {
       for (int c = 0; c < grid.getDimension(); c++) {
         if (!grid.isFixed(r, c)) {
-          // Check against the row.
           // TODO use enum to distinguish between "failed, no constraint violated", "failed, constraint violated" and "success"
-          found = found || checkForHiddenSingle(grid, r, c, grid.getRowElements(r, c));
+          // Check against the row, column, and box (stop as soon as one of them returns true).
+          boolean elementUpdated = checkForHiddenSingle(grid, r, c, grid.getRowElements(r, c)) ||
+              checkForHiddenSingle(grid, r, c, grid.getColumnElements(r, c)) ||
+              checkForHiddenSingle(grid, r, c, grid.getBoxElements(r, c));
 
-          // Check against the column.
-          found = found || checkForHiddenSingle(grid, r, c, grid.getColumnElements(r, c));
+          updated = updated || elementUpdated;
 
-          // Check against the box.
-          found = found || checkForHiddenSingle(grid, r, c, grid.getBoxElements(r, c));
         }
       }
     }
-    if (found) {
+    if (updated) {
       System.out.println("Restarting scan...");
-      grid = solve(grid); // Restart
+      return solve(grid); // Restart
     }
 
     // Check for a set of m elements in a group that are the only m elements in the group
