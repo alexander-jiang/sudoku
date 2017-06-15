@@ -145,9 +145,39 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
     // that contain a set of m values as candidates. In those elements, any value that
     // isn't one of the m shared values is not a candidate (as then there would be at most m-1
     // elements that remain to store the m shared values).
+    updated = false;
+    for (int r = 0; r < grid.getDimension(); r++) {
+      if (checkForHiddenSet(grid, grid.getRowElements(r, 0))) {
+        updated = true;
+      }
+    }
+    for (int c = 0; c < grid.getDimension(); c++) {
+      if (checkForHiddenSet(grid, grid.getColumnElements(0, c))) {
+        updated = true;
+      }
+    }
+    for (int r = 0; r < grid.getDimension(); r += Math.sqrt(grid.getDimension())) {
+      for (int c = 0; c < grid.getDimension(); c += Math.sqrt(grid.getDimension())) {
+        if (checkForHiddenSet(grid, grid.getBoxElements(r, c))) {
+          updated = true;
+        }
+      }
+    }
+    if (updated) {
+      System.out.println("Restarting scan...");
+      return solve(grid); // Restart
+    }
 
     // TODO is the idea to make the Sudoku grid functional by having the solver return a grid??
     // TODO And then this solve method could be recursive?
+    System.out.println("Finished!");
+    System.out.println("Elements and their candidate values:");
+    for (int r = 0; r < grid.getDimension(); r++) {
+      for (int c = 0; c < grid.getDimension(); c++) {
+        System.out.println("Candidates for element (" + r + ", " + c + "): " +
+            DisplayStrings.setToString(grid.getCandidateValues(r, c)));
+      }
+    }
     return grid;
   }
 
@@ -261,6 +291,8 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
 //      System.out.println("Candidates for element (" + coords.first() + ", " + coords.second() + "): " +
 //          DisplayStrings.setToString(grid.getCandidateValues(coords.first(), coords.second())));
 //    }
+
+    // But did we make any progress (i.e. removing a candidate value)?
     boolean updated = false;
     for (int r = 0; r < grid.getDimension(); r++) {
       // Don't constrain the elements in the same box.
@@ -275,20 +307,99 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
     return updated;
   }
 
+  private boolean checkForHiddenSet(ISquareSudokuGrid grid, List<Pair<Integer, Integer>> groupElements) {
+    // Count the occurrences of each candidate in the group.
+    Map<Integer, Integer> candidateOccurrences = new TreeMap<>();
+    for (Pair<Integer, Integer> coord : groupElements) {
+      if (!grid.isFixed(coord.first(), coord.second())) {
+        for (int candidate : grid.getCandidateValues(coord.first(), coord.second())) {
+          if (candidateOccurrences.containsKey(candidate)) {
+            candidateOccurrences.put(candidate, candidateOccurrences.get(candidate) + 1);
+          } else {
+            candidateOccurrences.put(candidate, 1);
+          }
+        }
+      }
+    }
+
+    // Check each of the values that appear as candidates in this group.
+    for (int candidate : candidateOccurrences.keySet()) {
+      // TODO Should depend on grid.getDimension
+      Set<Integer> candidatesIntersection = new TreeSet<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9));
+      // Find the set intersection of the sets of candidate values for each element
+      // that contains the selected value as a candidate.
+      for (Pair<Integer, Integer> coord : groupElements) {
+        if (!grid.isFixed(coord.first(), coord.second()) & grid.isACandidate(coord.first(), coord.second(), candidate)) {
+          candidatesIntersection.retainAll(grid.getCandidateValues(coord.first(), coord.second()));
+        }
+      }
+      // There needs to be at least as many candidates in the intersection of the candidate sets of elements
+      // that contain the selected value as a candidate as there are occurrences of the selected value as a candidate.
+      if (candidatesIntersection.size() < candidateOccurrences.get(candidate)) {
+        return false;
+      }
+
+      // Count the number of candidates that only appear as candidates in the same elements that
+      // the selected value appears in as a candidate (including the selected value itself).
+      Set<Integer> hiddenSet = new TreeSet<>(candidatesIntersection);
+      for (int candidateInIntersection : candidatesIntersection) {
+        if (candidateOccurrences.get(candidateInIntersection) != (int) candidateOccurrences.get(candidate)) {
+          hiddenSet.remove(candidateInIntersection);
+        }
+      }
+      // There must be exactly as many candidates in the intersection of the candidate sets of elements
+      // that contain the selected value as a candidate as there are occurrences of the selected value as a candidate.
+      if (hiddenSet.size() != candidateOccurrences.get(candidate)) {
+        return false;
+      }
+
+      // If control reaches here, means that the elements that contain the selected value as a candidate
+      // can only have the elements in the intersection as candidate values.
+      System.out.println("Found hidden set!");
+      System.out.println("Hidden set elements: " + DisplayStrings.setToString(hiddenSet));
+      System.out.println("Group elements and their candidate values:");
+      for (Pair<Integer, Integer> coords : groupElements) {
+        System.out.println("Candidates for element (" + coords.first() + ", " + coords.second() + "): " +
+            DisplayStrings.setToString(grid.getCandidateValues(coords.first(), coords.second())));
+      }
+
+      // But did we make any progress (i.e. removing a candidate value)?
+      boolean updated = false;
+      for (Pair<Integer, Integer> coord : groupElements) {
+        Set<Integer> elementCandidates = grid.getCandidateValues(coord.first(), coord.second());
+        if (elementCandidates.contains(candidate)) {
+          for (int elementCandidate : elementCandidates) {
+            if (!hiddenSet.contains(elementCandidate)) {
+              grid.setCandidate(coord.first(), coord.second(), elementCandidate, false);
+              updated = true;
+              System.out.println("Removed " + elementCandidate + " as a candidate from element (" +
+                  coord.first() + ", " + coord.second() + ")");
+            }
+          }
+        }
+      }
+      if (updated) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public static void main(String[] args) {
     ISquareSudokuGrid partiallyFilledGrid = new StandardSudokuGrid(new int[][] {
-        {0, 0, 0, 1, 5, 0, 0, 0, 3},
-        {7, 0, 4, 0, 0, 0, 1, 0, 0},
-        {0, 0, 0, 0, 0, 2, 7, 6, 0},
-        {0, 7, 0, 9, 0, 0, 0, 2, 0},
-        {0, 0, 0, 8, 0, 6, 0, 0, 0},
-        {0, 9, 0, 0, 0, 5, 0, 4, 0},
-        {0, 3, 5, 2, 0, 0, 0, 0, 0},
-        {0, 0, 7, 0, 0, 0, 2, 0, 1},
-        {2, 0, 0, 0, 9, 1, 0, 0, 0}
+        {0, 7, 6, 0, 9, 0, 0, 2, 0},
+        {2, 0, 0, 7, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 4, 0, 0, 0, 3},
+        {1, 9, 3, 0, 0, 0, 0, 4, 0},
+        {0, 0, 7, 0, 1, 0, 8, 0, 0},
+        {0, 4, 0, 0, 0, 0, 1, 3, 2},
+        {9, 0, 0, 0, 8, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 4, 0, 0, 5},
+        {0, 8, 0, 0, 2, 0, 3, 1, 0}
     });
     ISquareSudokuSolver solver = new ConstraintBasedSolver();
     System.out.println(partiallyFilledGrid.gridToString());
-    solver.solve(initializeCandidateValues(partiallyFilledGrid));
+    ISquareSudokuGrid solvedGrid = solver.solve(initializeCandidateValues(partiallyFilledGrid));
+    System.out.println(solvedGrid.gridToString());
   }
 }
