@@ -21,7 +21,6 @@ public class DisplayStrings {
       sb.append(value);
       sb.append(' ');
     }
-    sb.append('\n');
     return sb.toString();
   }
 }

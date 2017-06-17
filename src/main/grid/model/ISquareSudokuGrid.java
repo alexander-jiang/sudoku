@@ -75,6 +75,15 @@ public interface ISquareSudokuGrid {
   List<Pair<Integer, Integer>> getBoxElements(int i, int j);
 
   /**
+   * Returns the row-major coordinates of the N elements in the box at box coordinates (i, j)
+   * in the grid.
+   * @param i the row coordinate of the box in the grid
+   * @param j the column coordinate of the box in the grid
+   * @return  a list of coordinates of all elements in the box
+   */
+  List<Pair<Integer, Integer>> getBoxElementsByCoordinates(Pair<Integer, Integer> boxCoordinates);
+
+  /**
    * Returns whether the value is marked as a candidate for the element at (i, j). value must
    * be between 1 and N inclusive.
    * @param i the row coordinate of the element in the grid

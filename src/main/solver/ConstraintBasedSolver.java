@@ -141,6 +141,28 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
       return solve(grid); // Restart
     }
 
+    // Check if the candidates for a value in a column or row are restricted to a single box.
+    // If so, that value can't be a candidate anywhere else in that box.
+    updated = false;
+    for (int r = 0; r < grid.getDimension(); r++) {
+      for (int value = 1; value <= grid.getDimension(); value++) {
+        if (checkForBoxLockingCandidate(grid, value, grid.getRowElements(r, 0))) {
+          updated = true;
+        }
+      }
+    }
+    for (int c = 0; c < grid.getDimension(); c++) {
+      for (int value = 1; value <= grid.getDimension(); value++) {
+        if (checkForBoxLockingCandidate(grid, value, grid.getColumnElements(0, c))) {
+          updated = true;
+        }
+      }
+    }
+    if (updated) {
+      System.out.println("Restarting scan...");
+      return solve(grid); // Restart
+    }
+
     // Check for a set of m elements in a group that are the only m elements in the group
     // that contain a set of m values as candidates. In those elements, any value that
     // isn't one of the m shared values is not a candidate (as then there would be at most m-1
@@ -307,6 +329,48 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
     return updated;
   }
 
+  private boolean checkForBoxLockingCandidate(ISquareSudokuGrid grid, int value, List<Pair<Integer, Integer>> groupElements) {
+    boolean foundInBox = false;
+    Pair<Integer, Integer> boxCoordinates = new Pair<>(-1, -1);
+    for (Pair<Integer, Integer> coord : groupElements) {
+      // If grid has already assigned an element to this value (i.e. the value isn't a candidate), no need to check.
+      if (grid.getValue(coord.first(), coord.second()) == value) {
+        return false;
+      }
+
+      if (grid.isACandidate(coord.first(), coord.second(), value)) {
+        if (!foundInBox) {
+          foundInBox = true;
+          boxCoordinates = grid.getBoxCoordinates(coord.first(), coord.second());
+        } else if (!grid.getBoxCoordinates(coord.first(), coord.second()).equals(boxCoordinates)) {
+          return false;
+        }
+      }
+    }
+    // If control reaches here, means that this value is restricted to a single box in this row or column.
+    System.out.println("Found box-locking candidate in box (" + boxCoordinates.first() + ", " + boxCoordinates.second() +
+        "): " + value);
+//    System.out.println("Group elements and their candidate values:");
+//    for (Pair<Integer, Integer> coords : groupElements) {
+//      System.out.println("Candidates for element (" + coords.first() + ", " + coords.second() + "): " +
+//          DisplayStrings.setToString(grid.getCandidateValues(coords.first(), coords.second())));
+//    }
+
+    // But did we make any progress (i.e. removing a candidate value)?
+    boolean updated = false;
+    for (Pair<Integer, Integer> coord : grid.getBoxElementsByCoordinates(boxCoordinates)) {
+      // Don't constrain the elements in the same row or column.
+      if (!groupElements.contains(coord)) {
+        if (grid.isACandidate(coord.first(), coord.second(), value)) {
+          grid.setCandidate(coord.first(), coord.second(), value, false);
+          updated = true;
+          System.out.println("Removed " + value + " as a candidate from element (" + coord.first() + ", " + coord.second() + ")");
+        }
+      }
+    }
+    return updated;
+  }
+
   private boolean checkForHiddenSet(ISquareSudokuGrid grid, List<Pair<Integer, Integer>> groupElements) {
     // Count the occurrences of each candidate in the group.
     Map<Integer, Integer> candidateOccurrences = new TreeMap<>();
@@ -355,13 +419,12 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
 
       // If control reaches here, means that the elements that contain the selected value as a candidate
       // can only have the elements in the intersection as candidate values.
-      System.out.println("Found hidden set!");
-      System.out.println("Hidden set elements: " + DisplayStrings.setToString(hiddenSet));
-      System.out.println("Group elements and their candidate values:");
-      for (Pair<Integer, Integer> coords : groupElements) {
-        System.out.println("Candidates for element (" + coords.first() + ", " + coords.second() + "): " +
-            DisplayStrings.setToString(grid.getCandidateValues(coords.first(), coords.second())));
-      }
+      System.out.println("Found hidden set! Elements: " + DisplayStrings.setToString(hiddenSet));
+//      System.out.println("Group elements and their candidate values:");
+//      for (Pair<Integer, Integer> coords : groupElements) {
+//        System.out.println("Candidates for element (" + coords.first() + ", " + coords.second() + "): " +
+//            DisplayStrings.setToString(grid.getCandidateValues(coords.first(), coords.second())));
+//      }
 
       // But did we make any progress (i.e. removing a candidate value)?
       boolean updated = false;

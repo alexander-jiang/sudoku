@@ -86,6 +86,11 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
   }
 
   @Override
+  public List<Pair<Integer, Integer>> getBoxElementsByCoordinates(Pair<Integer, Integer> boxCoordinates) {
+    return getBoxElements(boxCoordinates.first() * 3, boxCoordinates.second() * 3); // should depend on N
+  }
+
+  @Override
   public boolean isACandidate(int i, int j, int value) {
     // A fixed element should have only one candidate value: the element's value in the grid.
     if (isFixed(i, j)) {
