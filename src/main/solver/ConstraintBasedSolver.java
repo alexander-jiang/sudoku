@@ -190,6 +190,32 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
       return solve(grid); // Restart
     }
 
+    // Check for a set of m elements in a group that contain only m candidates (each element must contain at least
+    // 2 candidates, but does not necessarily need to contain all m candidates). In that group, those m candidate
+    // values are only candidates in those m elements.
+    updated = false;
+    for (int r = 0; r < grid.getDimension(); r++) {
+      if (checkForNakedSet(grid, grid.getRowElements(r, 0))) {
+        updated = true;
+      }
+    }
+    for (int c = 0; c < grid.getDimension(); c++) {
+      if (checkForNakedSet(grid, grid.getColumnElements(0, c))) {
+        updated = true;
+      }
+    }
+    for (int r = 0; r < grid.getDimension(); r += Math.sqrt(grid.getDimension())) {
+      for (int c = 0; c < grid.getDimension(); c += Math.sqrt(grid.getDimension())) {
+        if (checkForNakedSet(grid, grid.getBoxElements(r, c))) {
+          updated = true;
+        }
+      }
+    }
+    if (updated) {
+      System.out.println("Restarting scan...");
+      return solve(grid); // Restart
+    }
+
     // TODO is the idea to make the Sudoku grid functional by having the solver return a grid??
     // TODO And then this solve method could be recursive?
     System.out.println("Finished!");
@@ -419,7 +445,7 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
 
       // If control reaches here, means that the elements that contain the selected value as a candidate
       // can only have the elements in the intersection as candidate values.
-      System.out.println("Found hidden set! Elements: " + DisplayStrings.setToString(hiddenSet));
+      System.out.println("Found hidden set! Candidate values: " + DisplayStrings.setToString(hiddenSet));
 //      System.out.println("Group elements and their candidate values:");
 //      for (Pair<Integer, Integer> coords : groupElements) {
 //        System.out.println("Candidates for element (" + coords.first() + ", " + coords.second() + "): " +
@@ -448,21 +474,102 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
     return false;
   }
 
+  private boolean checkForNakedSet(ISquareSudokuGrid grid, List<Pair<Integer, Integer>> groupElements) {
+    Set<Integer> nakedSubset;
+    List<Pair<Integer, Integer>> nakedSubsetCoords;
+    int groupCandidateCount = 0;
+    for (Pair<Integer, Integer> coord : groupElements) {
+      if (!grid.isFixed(coord.first(), coord.second())) {
+        groupCandidateCount++;
+      }
+    }
+    for (int numCandidates = 2; numCandidates < groupCandidateCount; numCandidates++) {
+      // Search for a naked n-subset where n is the number of candidates in the naked subset.
+      for (Pair<Integer, Integer> source : groupElements) {
+        // Elements with more than n candidate values can't be used to form a naked n-subset.
+        if (!grid.isFixed(source.first(), source.second()) &&
+            grid.getCandidateValues(source.first(), source.second()).size() <= numCandidates) {
+          // Try to build a union of element candidate values (starting with the source element)
+          // such that the number of candidates in the union doesn't exceed numCandidates
+          // (otherwise it's not a naked n-subset).
+          nakedSubset = grid.getCandidateValues(source.first(), source.second());
+          nakedSubsetCoords = new ArrayList<>();
+
+          for (Pair<Integer, Integer> coord : groupElements) {
+            if (!grid.isFixed(coord.first(), coord.second())) {
+              Set<Integer> tryToAdd = new TreeSet<>(nakedSubset);
+              tryToAdd.addAll(grid.getCandidateValues(coord.first(), coord.second()));
+              if (tryToAdd.size() <= numCandidates) {
+                nakedSubset = new TreeSet<>(tryToAdd);
+                nakedSubsetCoords.add(coord);
+              }
+            }
+          }
+
+          if (nakedSubsetCoords.size() == numCandidates) {
+            // Found a naked subset.
+            System.out.println("Found a naked subset! Candidate values: " + DisplayStrings.setToString(nakedSubset));
+//            System.out.println("Element coordinates: " + nakedSubsetCoords);
+//            System.out.println("Group elements and their candidate values:");
+//            for (Pair<Integer, Integer> coords : groupElements) {
+//              System.out.println("Candidates for element (" + coords.first() + ", " + coords.second() + "): " +
+//                  DisplayStrings.setToString(grid.getCandidateValues(coords.first(), coords.second())));
+//            }
+
+            // TODO check if the naked subset elements are all in multiple groups (e.g. all in the same row and in the same box)
+            // But did we make any progress (i.e. removing a candidate value)?
+            boolean updated = false;
+            for (Pair<Integer, Integer> coord : groupElements) {
+              if (!grid.isFixed(coord.first(), coord.second()) && !nakedSubsetCoords.contains(coord)) {
+                for (int candidate : nakedSubset) {
+                  if (grid.getCandidateValues(coord.first(), coord.second()).contains(candidate)) {
+                    grid.setCandidate(coord.first(), coord.second(), candidate, false);
+                    updated = true;
+                    System.out.println("Removed " + candidate + " as a candidate from element (" +
+                        coord.first() + ", " + coord.second() + ")");
+                  }
+                }
+              }
+            }
+            if (updated) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+    return false;
+  }
+
   public static void main(String[] args) {
+//    ISquareSudokuGrid partiallyFilledGrid = new StandardSudokuGrid(new int[][] {
+//        {0, 7, 6, 0, 9, 0, 0, 2, 0},
+//        {2, 0, 0, 7, 0, 0, 0, 0, 0},
+//        {0, 0, 0, 0, 4, 0, 0, 0, 3},
+//        {1, 9, 3, 0, 0, 0, 0, 4, 0},
+//        {0, 0, 7, 0, 1, 0, 8, 0, 0},
+//        {0, 4, 0, 0, 0, 0, 1, 3, 2},
+//        {9, 0, 0, 0, 8, 0, 0, 0, 0},
+//        {0, 0, 0, 0, 0, 4, 0, 0, 5},
+//        {0, 8, 0, 0, 2, 0, 3, 1, 0}
+//    });
+
     ISquareSudokuGrid partiallyFilledGrid = new StandardSudokuGrid(new int[][] {
-        {0, 7, 6, 0, 9, 0, 0, 2, 0},
-        {2, 0, 0, 7, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 4, 0, 0, 0, 3},
-        {1, 9, 3, 0, 0, 0, 0, 4, 0},
-        {0, 0, 7, 0, 1, 0, 8, 0, 0},
-        {0, 4, 0, 0, 0, 0, 1, 3, 2},
-        {9, 0, 0, 0, 8, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 4, 0, 0, 5},
-        {0, 8, 0, 0, 2, 0, 3, 1, 0}
+        {0, 1, 0, 7, 2, 0, 5, 6, 3},
+        {0, 5, 6, 0, 3, 0, 2, 4, 7},
+        {7, 3, 2, 5, 4, 6, 1, 8, 9},
+        {6, 9, 3, 2, 8, 7, 4, 1, 5},
+        {2, 4, 7, 6, 1, 5, 9, 3, 8},
+        {5, 8, 1, 3, 9, 4, 0, 0, 0},
+        {0, 0, 0, 0, 0, 2, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 5, 8, 7, 0, 0, 0, 0}
     });
+
     ISquareSudokuSolver solver = new ConstraintBasedSolver();
     System.out.println(partiallyFilledGrid.gridToString());
-    ISquareSudokuGrid solvedGrid = solver.solve(initializeCandidateValues(partiallyFilledGrid));
+    partiallyFilledGrid = initializeCandidateValues(partiallyFilledGrid);
+    ISquareSudokuGrid solvedGrid = solver.solve(partiallyFilledGrid);
     System.out.println(solvedGrid.gridToString());
   }
 }

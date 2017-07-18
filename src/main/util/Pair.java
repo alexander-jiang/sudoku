@@ -28,4 +28,9 @@ public class Pair<A, B> {
     Pair<?, ?> otherPair = (Pair) other;
     return first().equals(otherPair.first()) && second().equals(otherPair.second());
   }
+
+  @Override
+  public String toString() {
+    return "(" + first.toString() + ", " + second.toString() + ")";
+  }
 }
