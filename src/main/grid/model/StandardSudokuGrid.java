@@ -28,11 +28,28 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
    * @param initialValues a two-dimensional (N by N) array containing the initial values
    */
   public StandardSudokuGrid(int[][] initialValues) {
+    this.values = getGridCopy(initialValues);
+  }
+
+  /**
+   * Constructs a Sudoku main.grid with the given initial values and candidate values already
+   * assigned.
+   * @param initialValues a two-dimensional (N by N) array containing the initial and candidate values
+   */
+  public StandardSudokuGrid(int[][] initialValues, int[][] candidateSets) {
+    this(initialValues);
+    this.candidateSets = getGridCopy(candidateSets);
+  }
+
+  public int[][] getGridCopy(int[][] grid) {
+    int[][] copy = new int[grid.length][grid[0].length];
+    // Manual array copy required to keep the arrays separate in memory.
     for (int i = 0; i < N; i++) {
       for (int j = 0; j < N; j++) {
-        setValue(i, j, initialValues[i][j]);
+        copy[i][j] = grid[i][j];
       }
     }
+    return copy;
   }
 
   @Override
@@ -46,8 +63,10 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
   }
 
   @Override
-  public void setValue(int i, int j, int newValue) {
-    values[i][j] = newValue; // assert newValue is between 1 and 9? what if you set to 0?
+  public ISquareSudokuGrid setValue(int i, int j, int newValue) {
+    int[][] valuesCopy = getGridCopy(values);
+    valuesCopy[i][j] = newValue;
+    return new StandardSudokuGrid(valuesCopy); // assert newValue is between 1 and 9? what if you set to 0?
   }
 
   @Override
@@ -118,13 +137,15 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
   }
 
   @Override
-  public void setCandidate(int i, int j, int value, boolean isCandidate) {
+  public ISquareSudokuGrid setCandidate(int i, int j, int value, boolean isCandidate) {
     int mask = 0x0001 << value; // the 2^value bit is set to 1, all other bits are set to 0.
+    int[][] copyCandidateSets = getGridCopy(candidateSets);
     if (isCandidate) {
-      candidateSets[i][j] = candidateSets[i][j] | mask;
+      copyCandidateSets[i][j] = copyCandidateSets[i][j] | mask;
     } else {
-      candidateSets[i][j] = candidateSets[i][j] & ~mask;
+      copyCandidateSets[i][j] = copyCandidateSets[i][j] & ~mask;
     }
+    return new StandardSudokuGrid(values, copyCandidateSets);
   }
 
   @Override
