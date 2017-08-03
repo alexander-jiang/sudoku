@@ -34,14 +34,15 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
   /**
    * Constructs a Sudoku main.grid with the given initial values and candidate values already
    * assigned.
-   * @param initialValues a two-dimensional (N by N) array containing the initial and candidate values
+   * @param initialValues a two-dimensional (N by N) array containing the initial values
+   * @param candidateSets a two-dimensional (N by N) array containing integers (bit strings) that store which values are candidates
    */
   public StandardSudokuGrid(int[][] initialValues, int[][] candidateSets) {
     this(initialValues);
     this.candidateSets = getGridCopy(candidateSets);
   }
 
-  public int[][] getGridCopy(int[][] grid) {
+  private int[][] getGridCopy(int[][] grid) {
     int[][] copy = new int[grid.length][grid[0].length];
     // Manual array copy required to keep the arrays separate in memory.
     for (int i = 0; i < N; i++) {
