@@ -79,6 +79,27 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
   }
 
   @Override
+  public ISquareSudokuGrid step(ISquareSudokuGrid grid) {
+    return null; //TODO
+  }
+
+  @Override
+  public boolean isSolved(ISquareSudokuGrid grid) {
+    // Check that all elements are assigned a value.
+    for (int r = 0; r < grid.getDimension(); r++) {
+      for (int c = 0; c < grid.getDimension(); c++) {
+        if (!grid.isFixed(r, c)) {
+          return false;
+        }
+      }
+    }
+
+    // TODO Check each row, column, box (every number must appear exactly once).
+
+    return true;
+  }
+
+  @Override
   public ISquareSudokuGrid solve(ISquareSudokuGrid grid) {
     // Check for elements with only one candidate value (naked single). These elements should have
     // their value set to the single candidate value.
