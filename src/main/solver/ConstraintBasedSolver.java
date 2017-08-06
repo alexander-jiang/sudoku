@@ -94,7 +94,44 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
       }
     }
 
-    // TODO Check each row, column, box (every number must appear exactly once).
+    // Check each row, column, and box (every number must appear exactly once).
+    for (int r = 0; r < grid.getDimension(); r++) {
+      Set<Integer> values = new TreeSet<>();
+      List<Pair<Integer, Integer>> elements = grid.getRowElements(r, 0);
+      for (Pair<Integer, Integer> coords : elements) {
+        if (values.contains(grid.getValue(coords.first(), coords.second()))) {
+          return false; // Same number appears twice in the row
+        } else {
+          values.add(grid.getValue(coords.first(), coords.second()));
+        }
+      }
+    }
+
+    for (int c = 0; c < grid.getDimension(); c++) {
+      Set<Integer> values = new TreeSet<>();
+      List<Pair<Integer, Integer>> elements = grid.getColumnElements(0, c);
+      for (Pair<Integer, Integer> coords : elements) {
+        if (values.contains(grid.getValue(coords.first(), coords.second()))) {
+          return false; // Same number appears twice in the column
+        } else {
+          values.add(grid.getValue(coords.first(), coords.second()));
+        }
+      }
+    }
+
+    for (int r = 0; r < grid.getDimension(); r += Math.sqrt(grid.getDimension())) {
+      for (int c = 0; c < grid.getDimension(); c += Math.sqrt(grid.getDimension())) {
+        Set<Integer> values = new TreeSet<>();
+        List<Pair<Integer, Integer>> elements = grid.getBoxElements(r, c);
+        for (Pair<Integer, Integer> coords : elements) {
+          if (values.contains(grid.getValue(coords.first(), coords.second()))) {
+            return false; // Same number appears twice in the box
+          } else {
+            values.add(grid.getValue(coords.first(), coords.second()));
+          }
+        }
+      }
+    }
 
     return true;
   }
