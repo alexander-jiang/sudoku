@@ -138,7 +138,7 @@ public class StandardSudokuGridTest {
     assertFalse(emptyGrid.isACandidate(8, 6, 2));
     assertFalse(emptyGrid.isACandidate(5, 0, 3));
 
-    ISquareSudokuGrid updatedGrid = emptyGrid.setCandidate(1, 0, 5, true)
+    final ISquareSudokuGrid updatedGrid = emptyGrid.setCandidate(1, 0, 5, true)
         .setCandidate(1, 0, 6, false).setCandidate(8, 6, 3, true).setCandidate(8, 6, 4, true);
 
     // Shouldn't have updated the original grid.
