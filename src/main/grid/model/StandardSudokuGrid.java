@@ -38,7 +38,7 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
    * @param candidateSets a two-dimensional (N by N) array containing integers (bit strings) that store which values are candidates
    */
   public StandardSudokuGrid(int[][] initialValues, int[][] candidateSets) {
-    this(initialValues);
+    this.values = getGridCopy(initialValues);
     this.candidateSets = getGridCopy(candidateSets);
   }
 
@@ -67,7 +67,7 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
   public ISquareSudokuGrid setValue(int i, int j, int newValue) {
     int[][] valuesCopy = getGridCopy(values);
     valuesCopy[i][j] = newValue;
-    return new StandardSudokuGrid(valuesCopy); // assert newValue is between 1 and 9? what if you set to 0?
+    return new StandardSudokuGrid(valuesCopy, candidateSets); // assert newValue is between 1 and 9? what if you set to 0?
   }
 
   @Override
