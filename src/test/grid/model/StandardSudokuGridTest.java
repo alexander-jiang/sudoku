@@ -42,14 +42,11 @@ public class StandardSudokuGridTest {
     assertEquals(9, solvedGrid.getValue(7, 4));
     assertEquals(2, solvedGrid.getValue(4, 7));
 
-    ISquareSudokuGrid updatedGrid = solvedGrid.setValue(4, 7, 0);
-    assertEquals(0, updatedGrid.getValue(4, 7));
-    assertEquals(2, solvedGrid.getValue(4, 7));
+    solvedGrid.setValue(4, 7, 0);
+    assertEquals(0, solvedGrid.getValue(4, 7));
 
-    ISquareSudokuGrid updatedGrid2 = solvedGrid.setValue(4, 7, 3);
-    assertEquals(3, updatedGrid2.getValue(4, 7));
-    assertEquals(0, updatedGrid.getValue(4, 7));
-    assertEquals(2, solvedGrid.getValue(4, 7));
+    solvedGrid.setValue(4, 7, 3);
+    assertEquals(3, solvedGrid.getValue(4, 7));
   }
 
   @org.junit.Test
@@ -138,21 +135,18 @@ public class StandardSudokuGridTest {
     assertFalse(emptyGrid.isACandidate(8, 6, 2));
     assertFalse(emptyGrid.isACandidate(5, 0, 3));
 
-    final ISquareSudokuGrid updatedGrid = emptyGrid.setCandidate(1, 0, 5, true)
-        .setCandidate(1, 0, 6, false).setCandidate(8, 6, 3, true).setCandidate(8, 6, 4, true);
+    emptyGrid.setCandidate(1, 0, 5, true);
+    emptyGrid.setCandidate(1, 0, 6, false);
+    emptyGrid.setCandidate(8, 6, 3, true);
+    emptyGrid.setCandidate(8, 6, 4, true);
 
-    // Shouldn't have updated the original grid.
-    assertFalse(emptyGrid.isACandidate(1, 0, 5));
-    assertFalse(emptyGrid.isACandidate(8, 6, 3));
-    assertFalse(emptyGrid.isACandidate(8, 6, 4));
+    assertTrue(emptyGrid.isACandidate(1, 0, 5));
+    assertFalse(emptyGrid.isACandidate(1, 0, 6));
+    assertEquals(new TreeSet<>(Collections.singletonList(5)), emptyGrid.getCandidateValues(1, 0));
 
-    assertTrue(updatedGrid.isACandidate(1, 0, 5));
-    assertFalse(updatedGrid.isACandidate(1, 0, 6));
-    assertEquals(new TreeSet<>(Collections.singletonList(5)), updatedGrid.getCandidateValues(1, 0));
-
-    assertTrue(updatedGrid.isACandidate(8, 6, 3));
-    assertTrue(updatedGrid.isACandidate(8, 6, 4));
-    assertEquals(new TreeSet<>(Arrays.asList(3, 4)), updatedGrid.getCandidateValues(8, 6));
+    assertTrue(emptyGrid.isACandidate(8, 6, 3));
+    assertTrue(emptyGrid.isACandidate(8, 6, 4));
+    assertEquals(new TreeSet<>(Arrays.asList(3, 4)), emptyGrid.getCandidateValues(8, 6));
   }
 
   @org.junit.Test

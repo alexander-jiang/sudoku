@@ -64,10 +64,8 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
   }
 
   @Override
-  public ISquareSudokuGrid setValue(int i, int j, int newValue) {
-    int[][] valuesCopy = getGridCopy(values);
-    valuesCopy[i][j] = newValue;
-    return new StandardSudokuGrid(valuesCopy, candidateSets); // assert newValue is between 1 and 9? what if you set to 0?
+  public void setValue(int i, int j, int newValue) {
+    values[i][j] = newValue;
   }
 
   @Override
@@ -138,19 +136,17 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
   }
 
   @Override
-  public ISquareSudokuGrid setCandidate(int i, int j, int value, boolean isCandidate) {
-    int[][] copyCandidateSets = getGridCopy(candidateSets);
+  public void setCandidate(int i, int j, int value, boolean isCandidate) {
     if (isFixed(i, j)) {
-      copyCandidateSets[i][j] = 0;
+      candidateSets[i][j] = 0;
     } else {
       int mask = 0x0001 << value; // the 2^value bit is set to 1, all other bits are set to 0.
       if (isCandidate) {
-        copyCandidateSets[i][j] = copyCandidateSets[i][j] | mask;
+        candidateSets[i][j] = candidateSets[i][j] | mask;
       } else {
-        copyCandidateSets[i][j] = copyCandidateSets[i][j] & ~mask;
+        candidateSets[i][j] = candidateSets[i][j] & ~mask;
       }
     }
-    return new StandardSudokuGrid(values, copyCandidateSets);
   }
 
   @Override

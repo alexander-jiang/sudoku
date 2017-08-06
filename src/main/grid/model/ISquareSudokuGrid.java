@@ -30,13 +30,13 @@ public interface ISquareSudokuGrid {
   int getValue(int i, int j);
 
   /**
-   * Returns a new grid with the element at (i, j) updated to a value of newValue.
+   * Updates the grid with the element at (i, j) updated to a value of newValue.
    * newValue must be between 1 and N inclusive.
    * @param i the row coordinate of the element in the grid
    * @param j the column coordinate of the element in the grid
    * @param newValue  the element's new value
    */
-  ISquareSudokuGrid setValue(int i, int j, int newValue);
+  void setValue(int i, int j, int newValue);
 
   /**
    * Returns the row-major coordinates of the box that contains the element at (i, j) in the grid.
@@ -102,7 +102,7 @@ public interface ISquareSudokuGrid {
   Set<Integer> getCandidateValues(int i, int j);
 
   /**
-   * Returns a new grid with the element at (i, j) set to either have value as a candidate
+   * Updates the grid with the element at (i, j) set to either have value as a candidate
    * or not have value as a candidate, depending on if isCandidate is true or false, respectively.
    * value must be between 1 and N inclusive.
    * @param i the row coordinate of the element in the grid
@@ -110,7 +110,7 @@ public interface ISquareSudokuGrid {
    * @param value the value whose candidacy will be set
    * @param isCandidate the new candidacy
    */
-  ISquareSudokuGrid setCandidate(int i, int j, int value, boolean isCandidate);
+  void setCandidate(int i, int j, int value, boolean isCandidate);
 
   /**
    * Returns whether the element has been assigned a value, meaning that only one candidate
