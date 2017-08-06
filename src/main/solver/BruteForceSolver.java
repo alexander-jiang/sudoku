@@ -12,12 +12,17 @@ import main.grid.model.ISquareSudokuGrid;
  */
 public class BruteForceSolver implements ISquareSudokuSolver {
   @Override
-  public ISquareSudokuGrid step(ISquareSudokuGrid grid) {
+  public ISquareSudokuGrid getGrid() {
     return null;
   }
 
   @Override
-  public ISquareSudokuGrid solve(ISquareSudokuGrid grid) {
+  public ISquareSudokuGrid step() {
+    return null;
+  }
+
+  @Override
+  public ISquareSudokuGrid solve() {
     return null;
   }
 }

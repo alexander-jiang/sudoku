@@ -3,6 +3,7 @@ package test.solver;
 import main.grid.model.ISquareSudokuGrid;
 import main.grid.model.StandardSudokuGrid;
 import main.solver.ConstraintBasedSolver;
+import main.solver.ISquareSudokuSolver;
 import main.util.Pair;
 import org.junit.Test;
 
@@ -25,7 +26,8 @@ public class ConstraintBasedSolverTest {
       {1, 0, 0, 9, 4, 0, 0, 0, 2}
     });
 
-    ISquareSudokuGrid initialized = ConstraintBasedSolver.initializeCandidateValues(nakedSingle);
+    ISquareSudokuSolver solver = new ConstraintBasedSolver(nakedSingle);
+    ISquareSudokuGrid initialized = solver.getGrid();
     for (int r = 0; r < initialized.getDimension(); r++) {
       for (int c = 0; c < initialized.getDimension(); c++) {
         if (initialized.isFixed(r, c)) {
@@ -98,8 +100,8 @@ public class ConstraintBasedSolverTest {
         {0, 0, 0, 2, 7, 1, 0, 6, 4},
         {1, 0, 0, 9, 4, 0, 0, 0, 2}
     });
-    ISquareSudokuGrid initialized = ConstraintBasedSolver.initializeCandidateValues(nakedSingle);
-    ISquareSudokuGrid solved = new ConstraintBasedSolver().solve(initialized);
+    ISquareSudokuSolver solver = new ConstraintBasedSolver(nakedSingle);
+    ISquareSudokuGrid solved = solver.solve();
     ISquareSudokuGrid solution = new StandardSudokuGrid(new int[][] {
         {8, 1, 2, 7, 3, 9, 4, 5, 6},
         {3, 7, 9, 4, 6, 5, 1, 2, 8},
@@ -110,6 +112,35 @@ public class ConstraintBasedSolverTest {
         {4, 2, 6, 8, 5, 3, 9, 7, 1},
         {5, 9, 8, 2, 7, 1, 3, 6, 4},
         {1, 3, 7, 9, 4, 6, 5, 8, 2}
+    });
+    assertEquals(solution.gridToString(), solved.gridToString());
+  }
+
+  @Test
+  public void solveHiddenSingles() throws Exception {
+    ISquareSudokuGrid hiddenSingle = new StandardSudokuGrid(new int[][] {
+        {0, 2, 8, 0, 0, 7, 0, 0, 0},
+        {0, 1, 6, 0, 8, 3, 0, 7, 0},
+        {0, 0, 0, 0, 2, 0, 8, 5, 1},
+        {1, 3, 7, 2, 9, 0, 0, 0, 0},
+        {0, 0, 0, 7, 3, 0, 0, 0, 0},
+        {0, 0, 0, 0, 4, 6, 3, 0, 7},
+        {2, 9, 0, 0, 7, 0, 0, 0, 0},
+        {0, 0, 0, 8, 6, 0, 1, 4, 0},
+        {0, 0, 0, 3, 0, 0, 7, 0, 0}
+    });
+    ISquareSudokuSolver solver = new ConstraintBasedSolver(hiddenSingle);
+    ISquareSudokuGrid solved = solver.solve();
+    ISquareSudokuGrid solution = new StandardSudokuGrid(new int[][] {
+        {4, 2, 8, 1, 5, 7, 9, 3, 6},
+        {5, 1, 6, 9, 8, 3, 4, 7, 2},
+        {3, 7, 9, 6, 2, 4, 8, 5, 1},
+        {1, 3, 7, 2, 9, 8, 5, 6, 4},
+        {6, 4, 5, 7, 3, 1, 2, 9, 8},
+        {9, 8, 2, 5, 4, 6, 3, 1, 7},
+        {2, 9, 1, 4, 7, 5, 6, 8, 3},
+        {7, 5, 3, 8, 6, 2, 1, 4, 9},
+        {8, 6, 4, 3, 1, 9, 7, 2, 5}
     });
     assertEquals(solution.gridToString(), solved.gridToString());
   }

@@ -14,10 +14,21 @@ import java.util.*;
  */
 public class ConstraintBasedSolver implements ISquareSudokuSolver {
 
+  private ISquareSudokuGrid grid;
+
+  public ConstraintBasedSolver(ISquareSudokuGrid grid) {
+    this.grid = initializeCandidateValues(grid);
+  }
+
+  @Override
+  public ISquareSudokuGrid getGrid() {
+    return grid;
+  }
+
   /**
    * Set up the initial candidate values (as the grid may not have them set properly).
    */
-  public static ISquareSudokuGrid initializeCandidateValues(ISquareSudokuGrid grid) {
+  private ISquareSudokuGrid initializeCandidateValues(ISquareSudokuGrid grid) {
     // TODO consistency checking? i.e. same value doesn't appear twice in the same column, row, box (typos?)
     for (int r = 0; r < grid.getDimension(); r++) {
       for (int c = 0; c < grid.getDimension(); c++) {
@@ -55,37 +66,37 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
    * @param value the value to update the element to
    * @return  the updated grid
    */
-  private ISquareSudokuGrid constrain(ISquareSudokuGrid grid, int i, int j, int value) {
+  private ISquareSudokuGrid constrain(int i, int j, int value) {
     if (grid.isFixed(i, j)) {
       System.out.println("Attempted to update a fixed value! Aborting");
       return grid;
     }
 
-    grid = grid.setValue(i, j, value);
+    grid.setValue(i, j, value);
 
     // Update constraints for elements in the same row, column, and box.
     for (Pair<Integer, Integer> sameRowCoord : grid.getRowElements(i, j)) {
-      grid = grid.setCandidate(sameRowCoord.first(), sameRowCoord.second(), value, false);
+      grid.setCandidate(sameRowCoord.first(), sameRowCoord.second(), value, false);
     }
 
     for (Pair<Integer, Integer> sameColCoord : grid.getColumnElements(i, j)) {
-      grid = grid.setCandidate(sameColCoord.first(), sameColCoord.second(), value, false);
+      grid.setCandidate(sameColCoord.first(), sameColCoord.second(), value, false);
     }
 
     for (Pair<Integer, Integer> sameBoxCoord : grid.getBoxElements(i, j)) {
-      grid = grid.setCandidate(sameBoxCoord.first(), sameBoxCoord.second(), value, false);
+      grid.setCandidate(sameBoxCoord.first(), sameBoxCoord.second(), value, false);
     }
     System.out.println(grid.gridToString());
     return grid;
   }
 
   @Override
-  public ISquareSudokuGrid step(ISquareSudokuGrid grid) {
+  public ISquareSudokuGrid step() {
     return null; //TODO
   }
 
   @Override
-  public ISquareSudokuGrid solve(ISquareSudokuGrid grid) {
+  public ISquareSudokuGrid solve() {
     // Check for elements with only one candidate value (naked single). These elements should have
     // their value set to the single candidate value.
     boolean updated = false;
@@ -94,14 +105,14 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
         if (grid.getCandidateValues(r, c).size() == 1 && !grid.isFixed(r, c)) {
           int nakedSingle = (Integer) (grid.getCandidateValues(r, c).toArray()[0]);
           System.out.println("Found naked single in element (" + r + ", " + c + "): " + nakedSingle);
-          grid = constrain(grid, r, c, nakedSingle);
+          grid = constrain(r, c, nakedSingle);
           updated = true;
         }
       }
     }
     if (updated) {
       System.out.println("Restarting scan...");
-      return solve(grid); // Restart to scan from the beginning
+      return solve(); // Restart to scan from the beginning
     }
 
     // Check for elements which are the only element in the group (row, column, or box)
@@ -122,7 +133,7 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
     }
     if (updated) {
       System.out.println("Restarting scan...");
-      return solve(grid); // Restart
+      return solve(); // Restart
     }
 
     // Check if the candidates for a value in a box are restricted to a specific column or row.
@@ -144,7 +155,7 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
     }
     if (updated) {
       System.out.println("Restarting scan...");
-      return solve(grid); // Restart
+      return solve(); // Restart
     }
 
     // Check if the candidates for a value in a column or row are restricted to a single box.
@@ -166,7 +177,7 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
     }
     if (updated) {
       System.out.println("Restarting scan...");
-      return solve(grid); // Restart
+      return solve(); // Restart
     }
 
     // Check for a set of m elements in a group that are the only m elements in the group
@@ -193,7 +204,7 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
     }
     if (updated) {
       System.out.println("Restarting scan...");
-      return solve(grid); // Restart
+      return solve(); // Restart
     }
 
     // Check for a set of m elements in a group that contain only m candidates (each element must contain at least
@@ -219,7 +230,7 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
     }
     if (updated) {
       System.out.println("Restarting scan...");
-      return solve(grid); // Restart
+      return solve(); // Restart
     }
 
     // TODO is the idea to make the Sudoku grid functional by having the solver return a grid??
@@ -260,7 +271,7 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
 //        System.out.println("Candidates for element (" + coords.first() + ", " + coords.second() + "): " +
 //            DisplayStrings.setToString(grid.getCandidateValues(coords.first(), coords.second())));
 //      }
-      constrain(grid, r, c, hiddenSingle);
+      grid = constrain(r, c, hiddenSingle);
       return true;
     } else {
       return false;
@@ -572,10 +583,9 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
         {0, 0, 5, 8, 7, 0, 0, 0, 0}
     });
 
-    ISquareSudokuSolver solver = new ConstraintBasedSolver();
+    ISquareSudokuSolver solver = new ConstraintBasedSolver(partiallyFilledGrid);
     System.out.println(partiallyFilledGrid.gridToString());
-    partiallyFilledGrid = initializeCandidateValues(partiallyFilledGrid);
-    ISquareSudokuGrid solvedGrid = solver.solve(partiallyFilledGrid);
+    ISquareSudokuGrid solvedGrid = solver.solve();
     System.out.println(solvedGrid.gridToString());
   }
 }

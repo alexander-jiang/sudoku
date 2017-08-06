@@ -11,18 +11,23 @@ import main.grid.model.ISquareSudokuGrid;
  * once. A grid that is filled in this manner is a "solved" grid.</p>
  */
 public interface ISquareSudokuSolver {
+
+  /**
+   * Gets the current state of the grid (that the solver sees).
+   * @return  the grid
+   */
+  ISquareSudokuGrid getGrid();
+
   /**
    * Attempts to make a single step towards the solution. If the solver is unable to
    * make progress, it may return the initial grid.
-   * @param grid  the initial grid
    * @return  the grid after a single update has been made or the initial grid if no progress could be made
    */
-  ISquareSudokuGrid step(ISquareSudokuGrid grid);
+  ISquareSudokuGrid step();
 
   /**
    * Returns the solved grid, if the solver is able to find a solution from the initial grid.
-   * @param grid  the initial grid (with initial values already set)
    * @return  the solved grid, or an incomplete grid if the solver was unable to solve the grid
    */
-  ISquareSudokuGrid solve(ISquareSudokuGrid grid);
+  ISquareSudokuGrid solve();
 }
