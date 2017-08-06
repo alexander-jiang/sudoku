@@ -139,12 +139,16 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
 
   @Override
   public ISquareSudokuGrid setCandidate(int i, int j, int value, boolean isCandidate) {
-    int mask = 0x0001 << value; // the 2^value bit is set to 1, all other bits are set to 0.
     int[][] copyCandidateSets = getGridCopy(candidateSets);
-    if (isCandidate) {
-      copyCandidateSets[i][j] = copyCandidateSets[i][j] | mask;
+    if (isFixed(i, j)) {
+      copyCandidateSets[i][j] = 0;
     } else {
-      copyCandidateSets[i][j] = copyCandidateSets[i][j] & ~mask;
+      int mask = 0x0001 << value; // the 2^value bit is set to 1, all other bits are set to 0.
+      if (isCandidate) {
+        copyCandidateSets[i][j] = copyCandidateSets[i][j] | mask;
+      } else {
+        copyCandidateSets[i][j] = copyCandidateSets[i][j] & ~mask;
+      }
     }
     return new StandardSudokuGrid(values, copyCandidateSets);
   }
