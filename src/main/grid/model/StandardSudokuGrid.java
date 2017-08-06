@@ -5,7 +5,7 @@ import main.util.Pair;
 import java.util.*;
 
 /**
- * Representation of a standard, 9x9 Sudoku main.grid.
+ * Representation of a standard, 9x9 Sudoku grid.
  */
 public class StandardSudokuGrid implements ISquareSudokuGrid {
 
@@ -16,14 +16,14 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
   private int[][] candidateSets = new int[N][N];
 
   /**
-   * Creates an empty Sudoku main.grid.
+   * Creates an empty Sudoku grid.
    */
   public StandardSudokuGrid() {
 
   }
 
   /**
-   * Constructs a Sudoku main.grid with the given initial values already
+   * Constructs a Sudoku grid with the given initial values already
    * assigned.
    * @param initialValues a two-dimensional (N by N) array containing the initial values
    */
@@ -32,10 +32,11 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
   }
 
   /**
-   * Constructs a Sudoku main.grid with the given initial values and candidate values already
+   * Constructs a Sudoku grid with the given initial values and candidate values already
    * assigned.
    * @param initialValues a two-dimensional (N by N) array containing the initial values
-   * @param candidateSets a two-dimensional (N by N) array containing integers (bit strings) that store which values are candidates
+   * @param candidateSets a two-dimensional (N by N) array containing integers (bit strings)
+   *                      that store which values are candidates
    */
   public StandardSudokuGrid(int[][] initialValues, int[][] candidateSets) {
     this.values = getGridCopy(initialValues);

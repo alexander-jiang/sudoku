@@ -144,4 +144,34 @@ public class ConstraintBasedSolverTest {
     });
     assertEquals(solution.gridToString(), solved.gridToString());
   }
+
+  @Test
+  public void solvePointingLockedCandidates() throws Exception {
+    ISquareSudokuGrid pointingLockedCandidate = new StandardSudokuGrid(new int[][] {
+        {9, 8, 4, 0, 0, 0, 0, 0, 0},
+        {0, 0, 2, 5, 0, 0, 0, 4, 0},
+        {0, 0, 1, 9, 0, 4, 0, 0, 2},
+        {0, 0, 6, 0, 9, 7, 2, 3, 0},
+        {0, 0, 3, 6, 0, 2, 0, 0, 0},
+        {2, 0, 9, 0, 3, 5, 6, 1, 0},
+        {1, 9, 5, 7, 6, 8, 4, 2, 3},
+        {4, 2, 7, 3, 5, 1, 8, 9, 6},
+        {6, 3, 8, 0, 0, 9, 7, 5, 1}
+    });
+
+    ISquareSudokuSolver solver = new ConstraintBasedSolver(pointingLockedCandidate);
+    ISquareSudokuGrid solved = solver.solve();
+    ISquareSudokuGrid solution = new StandardSudokuGrid(new int[][] {
+        {9, 8, 4, 2, 7, 3, 1, 6, 5},
+        {3, 7, 2, 5, 1, 6, 9, 4, 8},
+        {5, 6, 1, 9, 8, 4, 3, 7, 2},
+        {8, 5, 6, 1, 9, 7, 2, 3, 4},
+        {7, 1, 3, 6, 4, 2, 5, 8, 9},
+        {2, 4, 9, 8, 3, 5, 6, 1, 7},
+        {1, 9, 5, 7, 6, 8, 4, 2, 3},
+        {4, 2, 7, 3, 5, 1, 8, 9, 6},
+        {6, 3, 8, 4, 2, 9, 7, 5, 1}
+    });
+    assertEquals(solution.gridToString(), solved.gridToString());
+  }
 }
