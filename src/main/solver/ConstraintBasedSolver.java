@@ -21,25 +21,25 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
     for (int r = 0; r < grid.getDimension(); r++) {
       for (int c = 0; c < grid.getDimension(); c++) {
         for (int value = 1; value <= grid.getDimension(); value++) {
-          grid.setCandidate(r, c, value, true);
+          grid = grid.setCandidate(r, c, value, true);
         }
       }
     }
 
     for (int r = 0; r < grid.getDimension(); r++) {
       for (int c = 0; c < grid.getDimension(); c++) {
-        int gridValue = grid.getValue(r, c);
-        if (gridValue != 0) {
+        if (grid.isFixed(r, c)) {
+          int gridValue = grid.getValue(r, c);
           for (Pair<Integer, Integer> sameRowCoord : grid.getRowElements(r, c)) {
-            grid.setCandidate(sameRowCoord.first(), sameRowCoord.second(), gridValue, false);
+            grid = grid.setCandidate(sameRowCoord.first(), sameRowCoord.second(), gridValue, false);
           }
 
           for (Pair<Integer, Integer> sameColCoord : grid.getColumnElements(r, c)) {
-            grid.setCandidate(sameColCoord.first(), sameColCoord.second(), gridValue, false);
+            grid = grid.setCandidate(sameColCoord.first(), sameColCoord.second(), gridValue, false);
           }
 
           for (Pair<Integer, Integer> sameBoxCoord : grid.getBoxElements(r, c)) {
-            grid.setCandidate(sameBoxCoord.first(), sameBoxCoord.second(), gridValue, false);
+            grid = grid.setCandidate(sameBoxCoord.first(), sameBoxCoord.second(), gridValue, false);
           }
         }
       }
@@ -60,19 +60,19 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
       return grid;
     }
 
-    grid.setValue(i, j, value);
+    grid = grid.setValue(i, j, value);
 
     // Update constraints for elements in the same row, column, and box.
     for (Pair<Integer, Integer> sameRowCoord : grid.getRowElements(i, j)) {
-      grid.setCandidate(sameRowCoord.first(), sameRowCoord.second(), value, false);
+      grid = grid.setCandidate(sameRowCoord.first(), sameRowCoord.second(), value, false);
     }
 
     for (Pair<Integer, Integer> sameColCoord : grid.getColumnElements(i, j)) {
-      grid.setCandidate(sameColCoord.first(), sameColCoord.second(), value, false);
+      grid = grid.setCandidate(sameColCoord.first(), sameColCoord.second(), value, false);
     }
 
     for (Pair<Integer, Integer> sameBoxCoord : grid.getBoxElements(i, j)) {
-      grid.setCandidate(sameBoxCoord.first(), sameBoxCoord.second(), value, false);
+      grid = grid.setCandidate(sameBoxCoord.first(), sameBoxCoord.second(), value, false);
     }
     System.out.println(grid.gridToString());
     return grid;
@@ -303,7 +303,7 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
       // Don't constrain the elements in the same box.
       if (!grid.getBoxCoordinates(lockedRow, c).equals(boxCoordinates)) {
         if (grid.isACandidate(lockedRow, c, value)) {
-          grid.setCandidate(lockedRow, c, value, false);
+          grid = grid.setCandidate(lockedRow, c, value, false);
           updated = true;
           System.out.println("Removed " + value + " as a candidate from element (" + lockedRow + ", " + c + ")");
         }
@@ -351,7 +351,7 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
       // Don't constrain the elements in the same box.
       if (!grid.getBoxCoordinates(r, lockedColumn).equals(boxCoordinates)) {
         if (grid.isACandidate(r, lockedColumn, value)) {
-          grid.setCandidate(r, lockedColumn, value, false);
+          grid = grid.setCandidate(r, lockedColumn, value, false);
           updated = true;
           System.out.println("Removed " + value + " as a candidate from element (" + r + ", " + lockedColumn + ")");
         }
@@ -393,7 +393,7 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
       // Don't constrain the elements in the same row or column.
       if (!groupElements.contains(coord)) {
         if (grid.isACandidate(coord.first(), coord.second(), value)) {
-          grid.setCandidate(coord.first(), coord.second(), value, false);
+          grid = grid.setCandidate(coord.first(), coord.second(), value, false);
           updated = true;
           System.out.println("Removed " + value + " as a candidate from element (" + coord.first() + ", " + coord.second() + ")");
         }
@@ -464,7 +464,7 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
         if (elementCandidates.contains(candidate)) {
           for (int elementCandidate : elementCandidates) {
             if (!hiddenSet.contains(elementCandidate)) {
-              grid.setCandidate(coord.first(), coord.second(), elementCandidate, false);
+              grid = grid.setCandidate(coord.first(), coord.second(), elementCandidate, false);
               updated = true;
               System.out.println("Removed " + elementCandidate + " as a candidate from element (" +
                   coord.first() + ", " + coord.second() + ")");
@@ -528,7 +528,7 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
               if (!grid.isFixed(coord.first(), coord.second()) && !nakedSubsetCoords.contains(coord)) {
                 for (int candidate : nakedSubset) {
                   if (grid.getCandidateValues(coord.first(), coord.second()).contains(candidate)) {
-                    grid.setCandidate(coord.first(), coord.second(), candidate, false);
+                    grid = grid.setCandidate(coord.first(), coord.second(), candidate, false);
                     updated = true;
                     System.out.println("Removed " + candidate + " as a candidate from element (" +
                         coord.first() + ", " + coord.second() + ")");
