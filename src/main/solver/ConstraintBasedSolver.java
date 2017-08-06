@@ -18,6 +18,7 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
    * Set up the initial candidate values (as the grid may not have them set properly).
    */
   public static ISquareSudokuGrid initializeCandidateValues(ISquareSudokuGrid grid) {
+    // TODO consistency checking? i.e. same value doesn't appear twice in the same column, row, box (typos?)
     for (int r = 0; r < grid.getDimension(); r++) {
       for (int c = 0; c < grid.getDimension(); c++) {
         for (int value = 1; value <= grid.getDimension(); value++) {

@@ -235,4 +235,24 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
     }
     return output.toString();
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (!(o instanceof StandardSudokuGrid)) {
+      return false;
+    }
+    StandardSudokuGrid otherGrid = (StandardSudokuGrid) o;
+    if (this.getDimension() != otherGrid.getDimension()) {
+      return false;
+    }
+    for (int r = 0; r < this.getDimension(); r++) {
+      for (int c = 0; c < this.getDimension(); c++) {
+        if (this.getValue(r, c) != otherGrid.getValue(r, c) &&
+            this.getCandidateValues(r, c) != otherGrid.getCandidateValues(r, c)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
 }
