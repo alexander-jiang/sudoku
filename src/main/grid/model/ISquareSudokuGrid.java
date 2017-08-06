@@ -122,6 +122,13 @@ public interface ISquareSudokuGrid {
   boolean isFixed(int i, int j);
 
   /**
+   * Returns whether the grid is solved: every element has been assigned a value, and the
+   * constraints are satisfied.
+   * @return  whether the grid is solved
+   */
+  boolean isSolved();
+
+  /**
    * Returns a string representation of the Sudoku grid.
    * @return  a human-readable representation of the grid.
    */

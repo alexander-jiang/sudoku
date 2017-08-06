@@ -20,14 +20,6 @@ public interface ISquareSudokuSolver {
   ISquareSudokuGrid step(ISquareSudokuGrid grid);
 
   /**
-   * Returns whether the grid is solved: every element has been assigned a value, and the
-   * constraints are satisfied.
-   * @param grid  the grid to check
-   * @return  whether the grid is solved
-   */
-  boolean isSolved(ISquareSudokuGrid grid);
-
-  /**
    * Returns the solved grid, if the solver is able to find a solution from the initial grid.
    * @param grid  the initial grid (with initial values already set)
    * @return  the solved grid, or an incomplete grid if the solver was unable to solve the grid

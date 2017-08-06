@@ -3,16 +3,13 @@ package test.grid.model;
 import main.grid.model.ISquareSudokuGrid;
 import main.grid.model.StandardSudokuGrid;
 import main.util.Pair;
-import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.TreeSet;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Unit tests for the standard Sudoku grid representation.
@@ -21,12 +18,12 @@ public class StandardSudokuGridTest {
 
   private ISquareSudokuGrid emptyGrid = new StandardSudokuGrid();
 
-  @Test
+  @org.junit.Test
   public void testGetDimension() throws Exception {
     assertEquals(9, emptyGrid.getDimension());
   }
 
-  @Test
+  @org.junit.Test
   public void testGetSetValue() throws Exception {
     ISquareSudokuGrid solvedGrid = new StandardSudokuGrid(new int[][] {
         {3, 7, 8, 2, 6, 5, 9, 1, 4},
@@ -55,7 +52,7 @@ public class StandardSudokuGridTest {
     assertEquals(2, solvedGrid.getValue(4, 7));
   }
 
-  @Test
+  @org.junit.Test
   public void testGetBoxCoordinates() throws Exception {
     assertEquals(new Pair<>(0, 0), emptyGrid.getBoxCoordinates(0, 0));
     assertEquals(new Pair<>(0, 0), emptyGrid.getBoxCoordinates(0, 2));
@@ -103,7 +100,7 @@ public class StandardSudokuGridTest {
     assertEquals(new Pair<>(2, 2), emptyGrid.getBoxCoordinates(8, 8));
   }
 
-  @Test
+  @org.junit.Test
   public void testGetElements() throws Exception {
     assertEquals(new ArrayList<>(Arrays.asList(
         new Pair<>(2, 0), new Pair<>(2, 1), new Pair<>(2, 2),
@@ -121,7 +118,7 @@ public class StandardSudokuGridTest {
         new Pair<>(2, 3), new Pair<>(2, 4), new Pair<>(2, 5))), emptyGrid.getBoxElements(2, 3));
   }
 
-  @Test
+  @org.junit.Test
   public void testGetSetCandidate() throws Exception {
     ISquareSudokuGrid emptyGrid = new StandardSudokuGrid(new int[][] {
         {0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -158,7 +155,7 @@ public class StandardSudokuGridTest {
     assertEquals(new TreeSet<>(Arrays.asList(3, 4)), updatedGrid.getCandidateValues(8, 6));
   }
 
-  @Test
+  @org.junit.Test
   public void testIsFixed() throws Exception {
     ISquareSudokuGrid partiallyFilledGrid = new StandardSudokuGrid(new int[][] {
         {0, 0, 0, 0, 0, 5, 0, 0, 7},
@@ -183,7 +180,75 @@ public class StandardSudokuGridTest {
     assertTrue(partiallyFilledGrid.isFixed(6, 3));
   }
 
-  @Test
+  @org.junit.Test
+  public void testIsSolved() throws Exception {
+    ISquareSudokuGrid solvedGrid = new StandardSudokuGrid(new int[][] {
+        {3, 7, 8, 2, 6, 5, 9, 1, 4},
+        {5, 9, 6, 8, 1, 4, 7, 3, 2},
+        {1, 4, 2, 7, 3, 9, 5, 6, 8},
+        {2, 1, 7, 3, 8, 6, 4, 5, 9},
+        {8, 5, 4, 9, 7, 1, 6, 2, 3},
+        {6, 3, 9, 5, 4, 2, 8, 7, 1},
+        {7, 8, 5, 4, 2, 3, 1, 9, 6},
+        {4, 6, 3, 1, 9, 7, 2, 8, 5},
+        {9, 2, 1, 6, 5, 8, 3, 4, 7}
+    });
+    assertTrue(solvedGrid.isSolved());
+
+    ISquareSudokuGrid notFilledGrid = new StandardSudokuGrid(new int[][] {
+        {0, 7, 8, 2, 6, 5, 9, 1, 4},
+        {5, 9, 6, 8, 1, 4, 7, 3, 2},
+        {1, 4, 2, 7, 3, 9, 5, 6, 8},
+        {2, 1, 7, 3, 8, 6, 4, 5, 9},
+        {8, 5, 4, 9, 7, 1, 6, 2, 3},
+        {6, 3, 9, 5, 4, 2, 8, 7, 1},
+        {7, 8, 5, 4, 2, 3, 1, 9, 6},
+        {4, 6, 3, 1, 9, 7, 2, 8, 5},
+        {9, 2, 1, 6, 5, 8, 3, 4, 7}
+    });
+    assertFalse(notFilledGrid.isSolved());
+
+    ISquareSudokuGrid repeatInRow = new StandardSudokuGrid(new int[][] {
+        {3, 7, 8, 2, 6, 5, 9, 1, 3},
+        {5, 9, 6, 8, 1, 4, 7, 3, 2},
+        {1, 4, 2, 7, 3, 9, 5, 6, 8},
+        {2, 1, 7, 3, 8, 6, 4, 5, 9},
+        {8, 5, 4, 9, 7, 1, 6, 2, 3},
+        {6, 3, 9, 5, 4, 2, 8, 7, 1},
+        {7, 8, 5, 4, 2, 3, 1, 9, 6},
+        {4, 6, 3, 1, 9, 7, 2, 8, 5},
+        {9, 2, 1, 6, 5, 8, 3, 4, 7}
+    });
+    assertFalse(repeatInRow.isSolved());
+
+    ISquareSudokuGrid repeatInCol = new StandardSudokuGrid(new int[][] {
+        {3, 7, 8, 2, 6, 5, 9, 1, 4},
+        {5, 9, 6, 8, 1, 4, 7, 3, 2},
+        {1, 4, 2, 7, 3, 9, 5, 6, 8},
+        {2, 1, 7, 3, 8, 6, 4, 5, 9},
+        {8, 5, 4, 9, 7, 1, 6, 2, 3},
+        {6, 3, 9, 5, 4, 2, 8, 7, 1},
+        {7, 8, 5, 4, 2, 3, 1, 9, 6},
+        {4, 6, 3, 1, 9, 7, 2, 8, 5},
+        {3, 2, 1, 6, 5, 8, 3, 4, 7}
+    });
+    assertFalse(repeatInCol.isSolved());
+
+    ISquareSudokuGrid repeatInBox = new StandardSudokuGrid(new int[][] {
+        {3, 7, 8, 2, 6, 5, 9, 1, 4},
+        {5, 9, 6, 8, 1, 4, 7, 3, 2},
+        {1, 4, 3, 7, 3, 9, 5, 6, 8},
+        {2, 1, 7, 3, 8, 6, 4, 5, 9},
+        {8, 5, 4, 9, 7, 1, 6, 2, 3},
+        {6, 3, 9, 5, 4, 2, 8, 7, 1},
+        {7, 8, 5, 4, 2, 3, 1, 9, 6},
+        {4, 6, 3, 1, 9, 7, 2, 8, 5},
+        {9, 2, 1, 6, 5, 8, 3, 4, 7}
+    });
+    assertFalse(repeatInBox.isSolved());
+  }
+
+  @org.junit.Test
   public void testGridToString() throws Exception {
     ISquareSudokuGrid partiallyFilledGrid = new StandardSudokuGrid(new int[][] {
         {0, 0, 0, 0, 0, 5, 0, 0, 7},

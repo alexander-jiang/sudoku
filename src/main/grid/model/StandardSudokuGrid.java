@@ -155,6 +155,59 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
   }
 
   @Override
+  public boolean isSolved() {
+    // Check that all elements are assigned a value.
+    for (int r = 0; r < this.getDimension(); r++) {
+      for (int c = 0; c < this.getDimension(); c++) {
+        if (!this.isFixed(r, c)) {
+          return false;
+        }
+      }
+    }
+
+    // Check each row, column, and box (every number must appear exactly once).
+    for (int r = 0; r < this.getDimension(); r++) {
+      Set<Integer> values = new TreeSet<>();
+      List<Pair<Integer, Integer>> elements = this.getRowElements(r, 0);
+      for (Pair<Integer, Integer> coords : elements) {
+        if (values.contains(this.getValue(coords.first(), coords.second()))) {
+          return false; // Same number appears twice in the row
+        } else {
+          values.add(this.getValue(coords.first(), coords.second()));
+        }
+      }
+    }
+
+    for (int c = 0; c < this.getDimension(); c++) {
+      Set<Integer> values = new TreeSet<>();
+      List<Pair<Integer, Integer>> elements = this.getColumnElements(0, c);
+      for (Pair<Integer, Integer> coords : elements) {
+        if (values.contains(this.getValue(coords.first(), coords.second()))) {
+          return false; // Same number appears twice in the column
+        } else {
+          values.add(this.getValue(coords.first(), coords.second()));
+        }
+      }
+    }
+
+    for (int r = 0; r < this.getDimension(); r += Math.sqrt(this.getDimension())) {
+      for (int c = 0; c < this.getDimension(); c += Math.sqrt(this.getDimension())) {
+        Set<Integer> values = new TreeSet<>();
+        List<Pair<Integer, Integer>> elements = this.getBoxElements(r, c);
+        for (Pair<Integer, Integer> coords : elements) {
+          if (values.contains(this.getValue(coords.first(), coords.second()))) {
+            return false; // Same number appears twice in the box
+          } else {
+            values.add(this.getValue(coords.first(), coords.second()));
+          }
+        }
+      }
+    }
+
+    return true;
+  }
+
+  @Override
   public String gridToString() {
     StringBuilder output = new StringBuilder();
     for (int r = 0; r < 9; r++) {

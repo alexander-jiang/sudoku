@@ -17,11 +17,6 @@ public class BruteForceSolver implements ISquareSudokuSolver {
   }
 
   @Override
-  public boolean isSolved(ISquareSudokuGrid grid) {
-    return false;
-  }
-
-  @Override
   public ISquareSudokuGrid solve(ISquareSudokuGrid grid) {
     return null;
   }
