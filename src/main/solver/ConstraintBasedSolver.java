@@ -557,35 +557,4 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
     }
     return false;
   }
-
-  public static void main(String[] args) {
-//    ISquareSudokuGrid partiallyFilledGrid = new StandardSudokuGrid(new int[][] {
-//        {0, 7, 6, 0, 9, 0, 0, 2, 0},
-//        {2, 0, 0, 7, 0, 0, 0, 0, 0},
-//        {0, 0, 0, 0, 4, 0, 0, 0, 3},
-//        {1, 9, 3, 0, 0, 0, 0, 4, 0},
-//        {0, 0, 7, 0, 1, 0, 8, 0, 0},
-//        {0, 4, 0, 0, 0, 0, 1, 3, 2},
-//        {9, 0, 0, 0, 8, 0, 0, 0, 0},
-//        {0, 0, 0, 0, 0, 4, 0, 0, 5},
-//        {0, 8, 0, 0, 2, 0, 3, 1, 0}
-//    });
-
-    ISquareSudokuGrid partiallyFilledGrid = new StandardSudokuGrid(new int[][] {
-        {0, 1, 0, 7, 2, 0, 5, 6, 3},
-        {0, 5, 6, 0, 3, 0, 2, 4, 7},
-        {7, 3, 2, 5, 4, 6, 1, 8, 9},
-        {6, 9, 3, 2, 8, 7, 4, 1, 5},
-        {2, 4, 7, 6, 1, 5, 9, 3, 8},
-        {5, 8, 1, 3, 9, 4, 0, 0, 0},
-        {0, 0, 0, 0, 0, 2, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {0, 0, 5, 8, 7, 0, 0, 0, 0}
-    });
-
-    ISquareSudokuSolver solver = new ConstraintBasedSolver(partiallyFilledGrid);
-    System.out.println(partiallyFilledGrid.gridToString());
-    ISquareSudokuGrid solvedGrid = solver.solve();
-    System.out.println(solvedGrid.gridToString());
-  }
 }

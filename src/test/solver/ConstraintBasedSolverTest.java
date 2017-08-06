@@ -186,4 +186,61 @@ public class ConstraintBasedSolverTest {
         new StandardSudokuGrid("318295476957643812246781593864952137123476958795318264631524789489167325572839641");
     assertEquals(solution.gridToString(), solved.gridToString());
   }
+
+  @Test
+  public void solveHiddenSubsets() throws Exception {
+    ISquareSudokuGrid hiddenQuad =
+        new StandardSudokuGrid("816573294392......4572.9..6941...5687854961236238...4.279.....1138....7.564....82");
+
+    ISquareSudokuSolver solver = new ConstraintBasedSolver(hiddenQuad);
+    ISquareSudokuGrid solved = solver.solve();
+    ISquareSudokuGrid solution =
+        new StandardSudokuGrid("816573294392164857457289316941327568785496123623815749279658431138942675564731982");
+    assertEquals(solution.gridToString(), solved.gridToString());
+  }
+
+  @Test
+  public void solveNakedSubsets() throws Exception {
+    ISquareSudokuGrid nakedQuad = new StandardSudokuGrid(new int[][] {
+        {0, 1, 0, 7, 2, 0, 5, 6, 3},
+        {0, 5, 6, 0, 3, 0, 2, 4, 7},
+        {7, 3, 2, 5, 4, 6, 1, 8, 9},
+        {6, 9, 3, 2, 8, 7, 4, 1, 5},
+        {2, 4, 7, 6, 1, 5, 9, 3, 8},
+        {5, 8, 1, 3, 9, 4, 0, 0, 0},
+        {0, 0, 0, 0, 0, 2, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 5, 8, 7, 0, 0, 0, 0}
+    });
+
+    ISquareSudokuSolver solver = new ConstraintBasedSolver(nakedQuad);
+    ISquareSudokuGrid solved = solver.solve();
+    ISquareSudokuGrid solution =
+        new StandardSudokuGrid("419728563856931247732546189693287415247615938581394672374152896928463751165879324");
+    assertEquals(solution.gridToString(), solved.gridToString());
+  }
+
+  @Test
+  public void solveXWing() throws Exception {
+    ISquareSudokuGrid xWing =
+        new StandardSudokuGrid(".41729.3.769..34.2.3264.7194.39..17.6.7..49.319537..24214567398376.9.541958431267");
+
+    ISquareSudokuSolver solver = new ConstraintBasedSolver(xWing);
+    ISquareSudokuGrid solved = solver.solve();
+    ISquareSudokuGrid solution =
+        new StandardSudokuGrid("841729635769153482532648719423985176687214953195376824214567398376892541958431267");
+    assertEquals(solution.gridToString(), solved.gridToString());
+  }
+
+  @Test
+  public void solveSkyscraper() throws Exception {
+    ISquareSudokuGrid skyscraper =
+        new StandardSudokuGrid(".76.9..2.2..7.........4...3193....4..274138...4....1329...8.........4.85.8..2.31.");
+
+    ISquareSudokuSolver solver = new ConstraintBasedSolver(skyscraper);
+    ISquareSudokuGrid solved = solver.solve();
+    ISquareSudokuGrid solution =
+        new StandardSudokuGrid("376598421214736598859241763193852647627413859548679132961385274732164985485927316");
+    assertEquals(solution.gridToString(), solved.gridToString());
+  }
 }
