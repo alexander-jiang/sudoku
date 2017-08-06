@@ -23,6 +23,26 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
   }
 
   /**
+   * Creates a Sudoku grid with the given initial values.
+   * @param compactValues a String containing the initial values
+   */
+  public StandardSudokuGrid(String compactValues) {
+    int length = compactValues.length();
+    if (length != 81) {
+      System.out.println("Invalid string: length is not 81!");
+    }
+    for (int i = 0; i < length; i++) {
+      if (compactValues.charAt(i) == '.') {
+        values[i / N][i % N] = 0;
+      } else if (compactValues.charAt(i) >= '1' && compactValues.charAt(i) <= '9') {
+        values[i / N][i % N] = Character.getNumericValue(compactValues.charAt(i));
+      } else {
+        System.out.println("Invalid string: invalid character: " + compactValues.charAt(i));
+      }
+    }
+  }
+
+  /**
    * Constructs a Sudoku grid with the given initial values already
    * assigned.
    * @param initialValues a two-dimensional (N by N) array containing the initial values

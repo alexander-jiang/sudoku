@@ -174,4 +174,16 @@ public class ConstraintBasedSolverTest {
     });
     assertEquals(solution.gridToString(), solved.gridToString());
   }
+
+  @Test
+  public void solveClaimingLockedCandidates() throws Exception {
+    ISquareSudokuGrid pointingLockedCandidate =
+        new StandardSudokuGrid("318..54.6...6.381...6.8.5.3864952137123476958795318264.3.5..78......73.5....39641");
+
+    ISquareSudokuSolver solver = new ConstraintBasedSolver(pointingLockedCandidate);
+    ISquareSudokuGrid solved = solver.solve();
+    ISquareSudokuGrid solution =
+        new StandardSudokuGrid("318295476957643812246781593864952137123476958795318264631524789489167325572839641");
+    assertEquals(solution.gridToString(), solved.gridToString());
+  }
 }
