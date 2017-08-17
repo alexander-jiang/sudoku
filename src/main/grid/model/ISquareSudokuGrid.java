@@ -30,7 +30,8 @@ public interface ISquareSudokuGrid {
   int getValue(int i, int j);
 
   /**
-   * Updates the grid with the element at (i, j) updated to a value of newValue.
+   * Updates the grid with the element at (i, j) updated to a value of newValue. Also updates
+   * elements in the same row, column, or box as (i, j) to not have a candidate value of newValue.
    * newValue must be between 1 and N inclusive.
    * @param i the row coordinate of the element in the grid
    * @param j the column coordinate of the element in the grid

@@ -2,13 +2,11 @@ package test.grid.model;
 
 import main.grid.model.ISquareSudokuGrid;
 import main.grid.model.StandardSudokuGrid;
-import main.solver.ISquareSudokuSolver;
 import main.util.Pair;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.TreeSet;
 
 import static org.junit.Assert.*;
@@ -17,8 +15,37 @@ import static org.junit.Assert.*;
  * Unit tests for the standard Sudoku grid representation.
  */
 public class StandardSudokuGridTest {
+  @Test
+  public void testNoArgConstructor() throws Exception {
+    ISquareSudokuGrid emptyGrid = new StandardSudokuGrid();
+    for (int r = 0; r < emptyGrid.getDimension(); r++) {
+      for (int c = 0; c < emptyGrid.getDimension(); c++) {
+        assertEquals(0, emptyGrid.getValue(r, c));
+        for (int value = 1; value <= emptyGrid.getDimension(); value++) {
+          assertTrue(emptyGrid.isACandidate(r, c, value));
+        }
+      }
+    }
+  }
 
-  private ISquareSudokuGrid emptyGrid = new StandardSudokuGrid();
+  @Test
+  public void testGivensConstructor() throws Exception {
+    ISquareSudokuGrid partiallyFilled = new StandardSudokuGrid(new int[][] {
+        {0, 2, 8, 0, 0, 7, 0, 0, 0},
+        {0, 1, 6, 0, 8, 3, 0, 7, 0},
+        {0, 0, 0, 0, 2, 0, 8, 5, 1},
+        {1, 3, 7, 2, 9, 0, 0, 0, 0},
+        {0, 0, 0, 7, 3, 0, 0, 0, 0},
+        {0, 0, 0, 0, 4, 6, 3, 0, 7},
+        {2, 9, 0, 0, 7, 0, 0, 0, 0},
+        {0, 0, 0, 8, 6, 0, 1, 4, 0},
+        {0, 0, 0, 3, 0, 0, 7, 0, 0}
+    });
+
+    assertFalse(partiallyFilled.isACandidate(0, 0, 7));
+    assertFalse(partiallyFilled.isACandidate(0, 0, 6));
+    assertFalse(partiallyFilled.isACandidate(2, 1, 9));
+  }
 
   @Test
   public void testCompactConstructor() throws Exception {
@@ -41,6 +68,7 @@ public class StandardSudokuGridTest {
 
   @Test
   public void testGetDimension() throws Exception {
+    ISquareSudokuGrid emptyGrid = new StandardSudokuGrid();
     assertEquals(9, emptyGrid.getDimension());
   }
 
@@ -51,7 +79,7 @@ public class StandardSudokuGridTest {
         {5, 9, 6, 8, 1, 4, 7, 3, 2},
         {1, 4, 2, 7, 3, 9, 5, 6, 8},
         {2, 1, 7, 3, 8, 6, 4, 5, 9},
-        {8, 5, 4, 9, 7, 1, 6, 2, 3},
+        {8, 5, 4, 9, 7, 1, 6, 0, 3},
         {6, 3, 9, 5, 4, 2, 8, 7, 1},
         {7, 8, 5, 4, 2, 3, 1, 9, 6},
         {4, 6, 3, 1, 9, 7, 2, 8, 5},
@@ -61,17 +89,38 @@ public class StandardSudokuGridTest {
     assertEquals(8, solvedGrid.getValue(0, 2));
     assertEquals(1, solvedGrid.getValue(5, 8));
     assertEquals(9, solvedGrid.getValue(7, 4));
-    assertEquals(2, solvedGrid.getValue(4, 7));
-
-    solvedGrid.setValue(4, 7, 0);
     assertEquals(0, solvedGrid.getValue(4, 7));
 
-    solvedGrid.setValue(4, 7, 3);
-    assertEquals(3, solvedGrid.getValue(4, 7));
+    solvedGrid.setValue(4, 7, 2);
+    assertEquals(2, solvedGrid.getValue(4, 7));
+  }
+
+  @Test
+  public void testPlaceValueConstraint() throws Exception {
+    ISquareSudokuGrid emptyGrid = new StandardSudokuGrid(new int[][] {
+        {0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0}
+    });
+    assertTrue(emptyGrid.isACandidate(1, 2, 9));
+    emptyGrid.setValue(1, 4, 9);
+    assertFalse(emptyGrid.isACandidate(1, 2, 9));
+    assertFalse(emptyGrid.isACandidate(1, 3, 9));
+    assertFalse(emptyGrid.isACandidate(2, 5, 9));
+    assertFalse(emptyGrid.isACandidate(7, 4, 9));
+    assertTrue(emptyGrid.isACandidate(2, 2, 9));
   }
 
   @Test
   public void testGetBoxCoordinates() throws Exception {
+    ISquareSudokuGrid emptyGrid = new StandardSudokuGrid();
+
     assertEquals(new Pair<>(0, 0), emptyGrid.getBoxCoordinates(0, 0));
     assertEquals(new Pair<>(0, 0), emptyGrid.getBoxCoordinates(0, 2));
     assertEquals(new Pair<>(0, 0), emptyGrid.getBoxCoordinates(2, 0));
@@ -120,6 +169,7 @@ public class StandardSudokuGridTest {
 
   @Test
   public void testGetElements() throws Exception {
+    ISquareSudokuGrid emptyGrid = new StandardSudokuGrid();
     assertEquals(new ArrayList<>(Arrays.asList(
         new Pair<>(2, 0), new Pair<>(2, 1), new Pair<>(2, 2),
         new Pair<>(2, 3), new Pair<>(2, 4), new Pair<>(2, 5),
@@ -150,24 +200,24 @@ public class StandardSudokuGridTest {
         {0, 0, 0, 0, 0, 0, 0, 0, 0}
     });
 
-    // Initially, no candidate values are set.
-    assertFalse(emptyGrid.isACandidate(1, 0, 9));
-    assertFalse(emptyGrid.isACandidate(2, 4, 6));
-    assertFalse(emptyGrid.isACandidate(8, 6, 2));
-    assertFalse(emptyGrid.isACandidate(5, 0, 3));
+    // Initially, all candidate values are set.
+    assertTrue(emptyGrid.isACandidate(1, 0, 9));
+    assertTrue(emptyGrid.isACandidate(2, 4, 6));
+    assertTrue(emptyGrid.isACandidate(8, 6, 2));
+    assertTrue(emptyGrid.isACandidate(5, 0, 3));
 
-    emptyGrid.setCandidate(1, 0, 5, true);
-    emptyGrid.setCandidate(1, 0, 6, false);
-    emptyGrid.setCandidate(8, 6, 3, true);
-    emptyGrid.setCandidate(8, 6, 4, true);
+    emptyGrid.setCandidate(1, 0, 5, false);
+    emptyGrid.setCandidate(1, 0, 6, true);
+    emptyGrid.setCandidate(8, 6, 3, false);
+    emptyGrid.setCandidate(8, 6, 4, false);
 
-    assertTrue(emptyGrid.isACandidate(1, 0, 5));
-    assertFalse(emptyGrid.isACandidate(1, 0, 6));
-    assertEquals(new TreeSet<>(Collections.singletonList(5)), emptyGrid.getCandidateValues(1, 0));
+    assertFalse(emptyGrid.isACandidate(1, 0, 5));
+    assertTrue(emptyGrid.isACandidate(1, 0, 6));
+    assertEquals(new TreeSet<>(Arrays.asList(1, 2, 3, 4, 6, 7, 8, 9)), emptyGrid.getCandidateValues(1, 0));
 
-    assertTrue(emptyGrid.isACandidate(8, 6, 3));
-    assertTrue(emptyGrid.isACandidate(8, 6, 4));
-    assertEquals(new TreeSet<>(Arrays.asList(3, 4)), emptyGrid.getCandidateValues(8, 6));
+    assertFalse(emptyGrid.isACandidate(8, 6, 3));
+    assertFalse(emptyGrid.isACandidate(8, 6, 4));
+    assertEquals(new TreeSet<>(Arrays.asList(1, 2, 5, 6, 7, 8, 9)), emptyGrid.getCandidateValues(8, 6));
   }
 
   @Test

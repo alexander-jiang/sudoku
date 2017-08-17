@@ -1,7 +1,6 @@
 package main.solver;
 
 import main.grid.model.ISquareSudokuGrid;
-import main.grid.model.StandardSudokuGrid;
 import main.util.DisplayStrings;
 import main.util.Pair;
 
@@ -17,76 +16,11 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
   private ISquareSudokuGrid grid;
 
   public ConstraintBasedSolver(ISquareSudokuGrid grid) {
-    this.grid = initializeCandidateValues(grid);
+    this.grid = grid;
   }
 
   @Override
   public ISquareSudokuGrid getGrid() {
-    return grid;
-  }
-
-  /**
-   * Set up the initial candidate values (as the grid may not have them set properly).
-   */
-  private ISquareSudokuGrid initializeCandidateValues(ISquareSudokuGrid grid) {
-    // TODO consistency checking? i.e. same value doesn't appear twice in the same column, row, box (typos?)
-    for (int r = 0; r < grid.getDimension(); r++) {
-      for (int c = 0; c < grid.getDimension(); c++) {
-        for (int value = 1; value <= grid.getDimension(); value++) {
-          grid.setCandidate(r, c, value, true);
-        }
-      }
-    }
-
-    for (int r = 0; r < grid.getDimension(); r++) {
-      for (int c = 0; c < grid.getDimension(); c++) {
-        if (grid.isFixed(r, c)) {
-          int gridValue = grid.getValue(r, c);
-          for (Pair<Integer, Integer> sameRowCoord : grid.getRowElements(r, c)) {
-            grid.setCandidate(sameRowCoord.first(), sameRowCoord.second(), gridValue, false);
-          }
-
-          for (Pair<Integer, Integer> sameColCoord : grid.getColumnElements(r, c)) {
-            grid.setCandidate(sameColCoord.first(), sameColCoord.second(), gridValue, false);
-          }
-
-          for (Pair<Integer, Integer> sameBoxCoord : grid.getBoxElements(r, c)) {
-            grid.setCandidate(sameBoxCoord.first(), sameBoxCoord.second(), gridValue, false);
-          }
-        }
-      }
-    }
-    return grid;
-  }
-
-  /**
-   * Assigns the value to the given element in the grid, and returns the resulting grid.
-   * @param i the row coordinate of the element to update
-   * @param j the column coordinate of the element to update
-   * @param value the value to update the element to
-   * @return  the updated grid
-   */
-  private ISquareSudokuGrid constrain(int i, int j, int value) {
-    if (grid.isFixed(i, j)) {
-      System.out.println("Attempted to update a fixed value! Aborting");
-      return grid;
-    }
-
-    grid.setValue(i, j, value);
-
-    // Update constraints for elements in the same row, column, and box.
-    for (Pair<Integer, Integer> sameRowCoord : grid.getRowElements(i, j)) {
-      grid.setCandidate(sameRowCoord.first(), sameRowCoord.second(), value, false);
-    }
-
-    for (Pair<Integer, Integer> sameColCoord : grid.getColumnElements(i, j)) {
-      grid.setCandidate(sameColCoord.first(), sameColCoord.second(), value, false);
-    }
-
-    for (Pair<Integer, Integer> sameBoxCoord : grid.getBoxElements(i, j)) {
-      grid.setCandidate(sameBoxCoord.first(), sameBoxCoord.second(), value, false);
-    }
-    System.out.println(grid.gridToString());
     return grid;
   }
 
@@ -105,7 +39,8 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
         if (grid.getCandidateValues(r, c).size() == 1 && !grid.isFixed(r, c)) {
           int nakedSingle = (Integer) (grid.getCandidateValues(r, c).toArray()[0]);
           System.out.println("Found naked single in element (" + r + ", " + c + "): " + nakedSingle);
-          grid = constrain(r, c, nakedSingle);
+          grid.setValue(r, c, nakedSingle);
+          System.out.println(grid.gridToString());
           updated = true;
         }
       }
@@ -271,7 +206,8 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
 //        System.out.println("Candidates for element (" + coords.first() + ", " + coords.second() + "): " +
 //            DisplayStrings.setToString(grid.getCandidateValues(coords.first(), coords.second())));
 //      }
-      grid = constrain(r, c, hiddenSingle);
+      grid.setValue(r, c, hiddenSingle);
+      System.out.println(grid.gridToString());
       return true;
     } else {
       return false;

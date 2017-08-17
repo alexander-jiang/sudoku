@@ -19,7 +19,14 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
    * Creates an empty Sudoku grid.
    */
   public StandardSudokuGrid() {
-
+    for (int r = 0; r < N; r++) {
+      for (int c = 0; c < N; c++) {
+        values[r][c] = 0;
+        for (int value = 1; value <= N; value++) {
+          setCandidate(r, c, value, true);
+        }
+      }
+    }
   }
 
   /**
@@ -27,6 +34,8 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
    * @param compactValues a String containing the initial values
    */
   public StandardSudokuGrid(String compactValues) {
+    // TODO consistency checking? i.e. same value doesn't appear twice in the same column, row, box (typos?)
+    this();
     int length = compactValues.length();
     if (length != 81) {
       System.out.println("Invalid string: length is not 81!");
@@ -35,7 +44,7 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
       if (compactValues.charAt(i) == '.') {
         values[i / N][i % N] = 0;
       } else if (compactValues.charAt(i) >= '1' && compactValues.charAt(i) <= '9') {
-        values[i / N][i % N] = Character.getNumericValue(compactValues.charAt(i));
+        setValue(i / N, i % N, Character.getNumericValue(compactValues.charAt(i)));
       } else {
         System.out.println("Invalid string: invalid character: " + compactValues.charAt(i));
       }
@@ -48,7 +57,14 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
    * @param initialValues a two-dimensional (N by N) array containing the initial values
    */
   public StandardSudokuGrid(int[][] initialValues) {
-    this.values = getGridCopy(initialValues);
+    this();
+    for (int r = 0; r < N; r++) {
+      for (int c = 0; c < N; c++) {
+        if (initialValues[r][c] != 0) {
+          setValue(r, c, initialValues[r][c]);
+        }
+      }
+    }
   }
 
   /**
@@ -61,6 +77,10 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
   public StandardSudokuGrid(int[][] initialValues, int[][] candidateSets) {
     this.values = getGridCopy(initialValues);
     this.candidateSets = getGridCopy(candidateSets);
+  }
+
+  public StandardSudokuGrid copy() {
+    return new StandardSudokuGrid(values, candidateSets);
   }
 
   private int[][] getGridCopy(int[][] grid) {
@@ -86,7 +106,25 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
 
   @Override
   public void setValue(int i, int j, int newValue) {
+    if (isFixed(i, j)) {
+      System.out.println("Attempted to update a fixed value! Aborting");
+      return;
+    }
+
     values[i][j] = newValue;
+
+    // Update constraints for elements in the same row, column, and box.
+    for (Pair<Integer, Integer> sameRowCoord : getRowElements(i, j)) {
+      setCandidate(sameRowCoord.first(), sameRowCoord.second(), newValue, false);
+    }
+
+    for (Pair<Integer, Integer> sameColCoord : getColumnElements(i, j)) {
+      setCandidate(sameColCoord.first(), sameColCoord.second(), newValue, false);
+    }
+
+    for (Pair<Integer, Integer> sameBoxCoord : getBoxElements(i, j)) {
+      setCandidate(sameBoxCoord.first(), sameBoxCoord.second(), newValue, false);
+    }
   }
 
   @Override
