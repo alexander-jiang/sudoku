@@ -21,6 +21,12 @@ public interface ISquareSudokuGrid {
   int getDimension();
 
   /**
+   * Returns a copy of the current state of the grid.
+   * @return  the copy of the grid
+   */
+  ISquareSudokuGrid copy();
+
+  /**
    * Returns the value in the element in the i-th row and j-th column of the grid. If no value has
    * been assigned yet, returns 0. Otherwise, it must return a value between 1 and N inclusive.
    * @param i the row coordinate of the element in the grid

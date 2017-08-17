@@ -79,6 +79,7 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
     this.candidateSets = getGridCopy(candidateSets);
   }
 
+  @Override
   public StandardSudokuGrid copy() {
     return new StandardSudokuGrid(values, candidateSets);
   }
@@ -186,7 +187,7 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
     }
 
     Set<Integer> candidateValues = new TreeSet<>();
-    for (int value = 1; value <= 9; value++) {
+    for (int value = 1; value <= 9; value++) { // TODO should depend on dimension
       if (isACandidate(i, j, value)) {
         candidateValues.add(value);
       }
