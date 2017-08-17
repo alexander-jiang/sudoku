@@ -171,6 +171,7 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
     // TODO is the idea to make the Sudoku grid functional by having the solver return a grid??
     // TODO And then this solve method could be recursive?
     System.out.println("Finished!");
+    System.out.println(grid.gridToString());
     System.out.println("Elements and their candidate values:");
     for (int r = 0; r < grid.getDimension(); r++) {
       for (int c = 0; c < grid.getDimension(); c++) {
