@@ -88,9 +88,7 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
     int[][] copy = new int[grid.length][grid[0].length];
     // Manual array copy required to keep the arrays separate in memory.
     for (int i = 0; i < N; i++) {
-      for (int j = 0; j < N; j++) {
-        copy[i][j] = grid[i][j];
-      }
+      System.arraycopy(grid[i], 0, copy[i], 0, N);
     }
     return copy;
   }
@@ -215,6 +213,58 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
   }
 
   @Override
+  public boolean checkBasicConstraints() {
+    // check that each row has no repeated values
+    for (int r = 0; r < 9; r++) {
+      List<Pair<Integer, Integer>> rowElements = getRowElements(r, 0);
+      Set<Integer> rowValues = new HashSet<>();
+      for (Pair<Integer, Integer> coord : rowElements) {
+        if (isFixed(coord.first(), coord.second())) {
+          int cellValue = getValue(coord.first(), coord.second());
+          if (rowValues.contains(cellValue)) {
+            return false;
+          }
+          rowValues.add(cellValue);
+        }
+      }
+    }
+
+    // check that each column has no repeated values
+    for (int c = 0; c < 9; c++) {
+      List<Pair<Integer, Integer>> columnElements = getColumnElements(0, c);
+      Set<Integer> columnValues = new HashSet<>();
+      for (Pair<Integer, Integer> coord : columnElements) {
+        if (isFixed(coord.first(), coord.second())) {
+          int cellValue = getValue(coord.first(), coord.second());
+          if (columnValues.contains(cellValue)) {
+            return false;
+          }
+          columnValues.add(cellValue);
+        }
+      }
+    }
+
+    // check that each box has no repeated values
+    for (int r = 0; r < 9; r += 3) {
+      for (int c = 0; c < 9; c += 3) {
+        List<Pair<Integer, Integer>> boxElements = getBoxElements(r, c);
+        Set<Integer> boxValues = new HashSet<>();
+        for (Pair<Integer, Integer> coord : boxElements) {
+          if (isFixed(coord.first(), coord.second())) {
+            int cellValue = getValue(coord.first(), coord.second());
+            if (boxValues.contains(cellValue)) {
+              return false;
+            }
+            boxValues.add(cellValue);
+          }
+        }
+      }
+    }
+
+    return true;
+  }
+
+  @Override
   public boolean isSolved() {
     // Check that all elements are assigned a value.
     for (int r = 0; r < this.getDimension(); r++) {
@@ -304,11 +354,27 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
     for (int r = 0; r < this.getDimension(); r++) {
       for (int c = 0; c < this.getDimension(); c++) {
         if (this.getValue(r, c) != otherGrid.getValue(r, c) &&
-            this.getCandidateValues(r, c) != otherGrid.getCandidateValues(r, c)) {
+            !this.getCandidateValues(r, c).equals(otherGrid.getCandidateValues(r, c))) {
           return false;
         }
       }
     }
     return true;
   }
+
+  @Override
+  public boolean valuesEqual(ISquareSudokuGrid otherGrid) {
+    if (this.getDimension() != otherGrid.getDimension()) {
+      return false;
+    }
+    for (int r = 0; r < this.getDimension(); r++) {
+      for (int c = 0; c < this.getDimension(); c++) {
+        if (this.getValue(r, c) != otherGrid.getValue(r, c)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
 }

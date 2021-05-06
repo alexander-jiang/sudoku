@@ -135,9 +135,18 @@ public interface ISquareSudokuGrid {
    */
   boolean isSolved();
 
+  boolean checkBasicConstraints();
+
   /**
    * Returns a string representation of the Sudoku grid.
    * @return  a human-readable representation of the grid.
    */
   String gridToString();
+
+  /**
+   * Checks for equality by only comparing the values (not the candidates).
+   * @param otherGrid the other grid
+   * @return  whether the other grid has the same values as the current grid
+   */
+  boolean valuesEqual(ISquareSudokuGrid otherGrid);
 }

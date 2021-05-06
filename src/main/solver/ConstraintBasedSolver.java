@@ -182,6 +182,12 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
     return grid;
   }
 
+  @Override
+  public List<ISquareSudokuGrid> findAllSolutions() {
+    System.out.println("constraint based solver doesn't implement findAllSolutions!");
+    return null;
+  }
+
   private boolean checkForHiddenSingle(ISquareSudokuGrid grid, int r, int c, List<Pair<Integer, Integer>> groupCoordinates) {
     Set<Integer> candidates = grid.getCandidateValues(r, c);
     for (Pair<Integer, Integer> coords : groupCoordinates) {

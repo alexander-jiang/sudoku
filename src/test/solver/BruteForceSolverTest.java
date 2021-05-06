@@ -6,9 +6,27 @@ import main.solver.BruteForceSolver;
 import main.solver.ISquareSudokuSolver;
 import org.junit.Test;
 
+import java.util.List;
+
 import static org.junit.Assert.*;
 
 public class BruteForceSolverTest {
+  @Test
+  public void solveClaimingLockedCandidates() throws Exception {
+    ISquareSudokuGrid pointingLockedCandidate =
+            new StandardSudokuGrid("318..54.6...6.381...6.8.5.3864952137123476958795318264.3.5..78......73.5....39641");
+
+    ISquareSudokuSolver solver = new BruteForceSolver(pointingLockedCandidate);
+    ISquareSudokuGrid solved = solver.solve();
+    ISquareSudokuGrid solution =
+            new StandardSudokuGrid("318295476957643812246781593864952137123476958795318264631524789489167325572839641");
+    assertEquals(solution.gridToString(), solved.gridToString());
+
+    List<ISquareSudokuGrid> solutions = solver.findAllSolutions();
+    assertTrue(solutions.contains(solution));
+    assertEquals(1, solutions.size());
+  }
+
   @Test
   public void testSolveSkyscraper() throws Exception {
     ISquareSudokuGrid skyscraper =
@@ -19,6 +37,10 @@ public class BruteForceSolverTest {
     ISquareSudokuGrid solution =
         new StandardSudokuGrid("376598421214736598859241763193852647627413859548679132961385274732164985485927316");
     assertEquals(solution.gridToString(), solved.gridToString());
+
+    List<ISquareSudokuGrid> solutions = solver.findAllSolutions();
+    assertTrue(solutions.contains(solution));
+    assertEquals(1, solutions.size());
   }
 
   @Test
@@ -31,5 +53,25 @@ public class BruteForceSolverTest {
     ISquareSudokuGrid solution =
         new StandardSudokuGrid("841729635769153482532648719423985176687214953195376824214567398376892541958431267");
     assertEquals(solution.gridToString(), solved.gridToString());
+
+    List<ISquareSudokuGrid> solutions = solver.findAllSolutions();
+    assertTrue(solutions.contains(solution));
+    assertEquals(1, solutions.size());
+  }
+
+  @Test
+  public void findMultipleSolutions() throws Exception {
+    ISquareSudokuGrid improperPuzzle =
+            new StandardSudokuGrid("2957438614318659..8761925433874592166123874955492167387635241899286713541549386..");
+
+    ISquareSudokuSolver solver = new BruteForceSolver(improperPuzzle);
+    List<ISquareSudokuGrid> solutions = solver.findAllSolutions();
+    ISquareSudokuGrid solution1 =
+            new StandardSudokuGrid("295743861431865927876192543387459216612387495549216738763524189928671354154938672");
+    ISquareSudokuGrid solution2 =
+            new StandardSudokuGrid("295743861431865972876192543387459216612387495549216738763524189928671354154938627");
+    assertTrue(solutions.contains(solution1));
+    assertTrue(solutions.contains(solution2));
+    assertEquals(2, solutions.size());
   }
 }

@@ -3,8 +3,7 @@ package main.solver;
 import main.grid.model.ISquareSudokuGrid;
 import main.util.Pair;
 
-import java.util.ArrayList;
-import java.util.Set;
+import java.util.*;
 
 /**
  * A naive, brute-force solver that attempts to place each possible value in each empty
@@ -68,11 +67,84 @@ public class BruteForceSolver implements ISquareSudokuSolver {
     return null;
   }
 
-  /**
-   * Attempts to find multiple solutions.
-   * @return  a list containing the different solutions
-   */
-  private ArrayList<ISquareSudokuGrid> findAllSolutions() {
-    return null;
+  @Override
+  public List<ISquareSudokuGrid> findAllSolutions() {
+    List<ISquareSudokuGrid> solutions = new ArrayList<>();
+    if (grid.isSolved()) {
+      solutions.add(grid);
+      return solutions;
+    }
+
+    Set<ISquareSudokuGrid> visited = new HashSet<>();
+    List<ISquareSudokuGrid> frontier = new LinkedList<>();
+    frontier.add(grid);
+
+    while (!frontier.isEmpty()) {
+      ISquareSudokuGrid currentGrid = frontier.remove(0);
+      if (!currentGrid.checkBasicConstraints()) {
+        continue;
+      }
+      if (visited.contains(currentGrid)) {
+        continue;
+      }
+//      System.out.println("frontier size: " + frontier.size());
+      visited.add(currentGrid);
+//      System.out.println("visited size: " + visited.size());
+//      System.out.println(currentGrid.gridToString());
+
+      if (currentGrid.isSolved()) {
+        if (!solutions.contains(currentGrid)) {
+          System.out.println("found solution!");
+          solutions.add(currentGrid);
+        }
+        continue;
+      }
+
+      List<ISquareSudokuGrid> neighbors = new ArrayList<>();
+      ISquareSudokuGrid forcedNeighbor = currentGrid.copy();
+      boolean invalid = false;
+      boolean forced = false;
+      // generate neighbors
+      for (int r = 0; r < currentGrid.getDimension(); r++) {
+        for (int c = 0; c < currentGrid.getDimension(); c++) {
+          if (!currentGrid.isFixed(r, c)) {
+            Set<Integer> candidates = currentGrid.getCandidateValues(r, c);
+            if (candidates.size() == 0) {
+              invalid = true;
+              continue;
+            } else if (candidates.size() == 1) {
+              forced = true;
+              Integer[] candidatesArray = new Integer[candidates.size()];
+              candidates.toArray(candidatesArray);
+              forcedNeighbor.setValue(r, c, candidatesArray[0]);
+            }
+            for (int candidate : candidates) {
+              ISquareSudokuGrid gridCopy = currentGrid.copy();
+              gridCopy.setValue(r, c, candidate);
+              neighbors.add(gridCopy);
+            }
+          }
+        }
+      }
+
+      if (invalid) {
+        continue;
+      }
+      if (forced) {
+        if (!visited.contains(forcedNeighbor)) {
+          // skips the candidates check when checking equality
+          frontier.add(0, forcedNeighbor);
+        }
+        continue;
+      }
+      // add neighbors that haven't been visited to the frontier
+      for (ISquareSudokuGrid neighbor : neighbors) {
+        if (!visited.contains(neighbor)) {
+          // skips the candidates check when checking equality
+          frontier.add(0, neighbor);
+        }
+      }
+    }
+    return solutions;
   }
 }

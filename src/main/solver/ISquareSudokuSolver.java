@@ -2,6 +2,8 @@ package main.solver;
 
 import main.grid.model.ISquareSudokuGrid;
 
+import java.util.List;
+
 /**
  * Interface for solvers of square Sudoku variants.
  *
@@ -30,4 +32,10 @@ public interface ISquareSudokuSolver {
    * @return  the solved grid, or an incomplete grid if the solver was unable to solve the grid
    */
   ISquareSudokuGrid solve();
+
+  /**
+   * Attempts to find multiple solutions.
+   * @return  a list containing the different solutions
+   */
+  List<ISquareSudokuGrid> findAllSolutions();
 }
