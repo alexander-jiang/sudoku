@@ -63,7 +63,7 @@ public class StandardSudokuGridTest {
         {0, 0, 0, 0, 3, 9, 6, 4, 1}
     });
     assertEquals(arrayConstructor.gridToString(), compactConstructor.gridToString());
-    assertTrue(arrayConstructor.equals(compactConstructor));
+    assertEquals(arrayConstructor, compactConstructor);
   }
 
   @Test
@@ -326,16 +326,72 @@ public class StandardSudokuGridTest {
         {3, 4, 6, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0}
     });
-    assertEquals("   |  5|  7\n" +
-        "7  | 89|1 3\n" +
-        " 92|7  |  5\n" +
-        "---+---+---\n" +
-        "   |247|  1\n" +
-        "  5|   |9  \n" +
-        " 28|9  |6  \n" +
-        "---+---+---\n" +
-        "2 9|1  |3  \n" +
-        "346|   |   \n" +
-        "   |   |   \n", partiallyFilledGrid.gridToString());
+    assertEquals("""
+               |  5|  7
+            7  | 89|1 3
+             92|7  |  5
+            ---+---+---
+               |247|  1
+              5|   |9 \s
+             28|9  |6 \s
+            ---+---+---
+            2 9|1  |3 \s
+            346|   |  \s
+               |   |  \s
+            """, partiallyFilledGrid.gridToString());
+  }
+
+  @Test
+  public void testCheckBasicConstraints() throws Exception {
+    ISquareSudokuGrid partiallyFilledGrid = new StandardSudokuGrid(new int[][] {
+            {0, 0, 0, 0, 0, 5, 0, 0, 7},
+            {7, 0, 0, 0, 8, 9, 1, 0, 3},
+            {0, 9, 2, 7, 0, 0, 0, 0, 5},
+            {0, 0, 0, 2, 4, 7, 0, 0, 1},
+            {0, 0, 5, 0, 0, 0, 9, 0, 0},
+            {0, 2, 8, 9, 0, 0, 6, 0, 0},
+            {2, 0, 9, 1, 0, 0, 3, 0, 0},
+            {3, 4, 6, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0}
+    });
+    assertTrue(partiallyFilledGrid.checkBasicConstraints());
+
+    // TODO add more test cases for grid that violate basic constraints
+    ISquareSudokuGrid badPuzzle = new StandardSudokuGrid(new int[][] {
+            {2, 9, 5, 7, 4, 3, 8, 6, 1},
+            {4, 3, 1, 8, 6, 5, 9, 0, 0},
+            {8, 7, 6, 1, 9, 2, 5, 4, 3},
+            {3, 8, 7, 4, 5, 9, 2, 1, 6},
+            {6, 1, 2, 3, 8, 7, 4, 9, 5},
+            {5, 4, 9, 2, 1, 6, 7, 3, 8},
+            {7, 6, 3, 5, 3, 4, 1, 8, 9}, // two 3's in this row (also two 3's in the lower middle box)
+            {9, 2, 8, 6, 7, 1, 3, 5, 4},
+            {1, 5, 4, 9, 3, 8, 6, 0, 0}
+    });
+    assertFalse(badPuzzle.checkBasicConstraints());
+  }
+
+  @Test
+  public void testCompactString() throws Exception {
+    ISquareSudokuGrid partiallyFilledGrid = new StandardSudokuGrid(new int[][] {
+            {0, 0, 0, 0, 0, 5, 0, 0, 7},
+            {7, 0, 0, 0, 8, 9, 1, 0, 3},
+            {0, 9, 2, 7, 0, 0, 0, 0, 5},
+            {0, 0, 0, 2, 4, 7, 0, 0, 1},
+            {0, 0, 5, 0, 0, 0, 9, 0, 0},
+            {0, 2, 8, 9, 0, 0, 6, 0, 0},
+            {2, 0, 9, 1, 0, 0, 3, 0, 0},
+            {3, 4, 6, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0}
+    });
+    assertEquals(".....5..7" +
+            "7...891.3" +
+            ".927....5" +
+            "...247..1" +
+            "..5...9.." +
+            ".289..6.." +
+            "2.91..3.." +
+            "346......" +
+            ".........", partiallyFilledGrid.compactString());
   }
 }

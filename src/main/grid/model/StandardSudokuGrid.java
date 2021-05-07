@@ -34,7 +34,6 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
    * @param compactValues a String containing the initial values
    */
   public StandardSudokuGrid(String compactValues) {
-    // TODO consistency checking? i.e. same value doesn't appear twice in the same column, row, box (typos?)
     this();
     int length = compactValues.length();
     if (length != 81) {
@@ -337,6 +336,21 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
       }
       if (r == 2 || r == 5) {
         output.append("---+---+---\n");
+      }
+    }
+    return output.toString();
+  }
+
+  @Override
+  public String compactString() {
+    StringBuilder output = new StringBuilder();
+    for (int r = 0; r < 9; r++) {
+      for (int c = 0; c < 9; c++) {
+        if (values[r][c] == 0) {
+          output.append('.');
+        } else {
+          output.append(values[r][c]);
+        }
       }
     }
     return output.toString();

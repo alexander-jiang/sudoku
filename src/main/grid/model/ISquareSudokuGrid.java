@@ -144,6 +144,12 @@ public interface ISquareSudokuGrid {
   String gridToString();
 
   /**
+   * Returns a compact string representation of the Sudoku grid (values only).
+   * @return  a compact representation of the grid's values
+   */
+  String compactString();
+
+  /**
    * Checks for equality by only comparing the values (not the candidates).
    * @param otherGrid the other grid
    * @return  whether the other grid has the same values as the current grid

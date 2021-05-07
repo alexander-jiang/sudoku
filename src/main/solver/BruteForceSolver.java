@@ -49,7 +49,7 @@ public class BruteForceSolver implements ISquareSudokuSolver {
             ISquareSudokuGrid gridCopy = grid.copy();
             System.out.printf("Setting element (%d, %d) to %d%n", r, c, candidate);
             gridCopy.setValue(r, c, candidate);
-            System.out.println(gridCopy.gridToString());
+//            System.out.println(gridCopy.gridToString());
             ISquareSudokuSolver newSolver = new BruteForceSolver(gridCopy);
             ISquareSudokuGrid solution = newSolver.solve();
             if (solution != null && solution.isSolved()) {
@@ -64,6 +64,76 @@ public class BruteForceSolver implements ISquareSudokuSolver {
       }
     }
     System.out.println("Reached the end!");
+    return null;
+  }
+
+  public ISquareSudokuGrid solveIterative() {
+    if (grid.isSolved()) {
+      return grid;
+    }
+
+    // storing the compact string representation of each state instead of the full Java object
+    Set<String> visited = new HashSet<>();
+    List<ISquareSudokuGrid> frontier = new LinkedList<>();
+    frontier.add(grid);
+
+    while (!frontier.isEmpty()) {
+      ISquareSudokuGrid currentGrid = frontier.remove(0);
+      if (!currentGrid.checkBasicConstraints()) {
+        continue;
+      }
+      if (visited.contains(currentGrid.compactString())) {
+        continue;
+      }
+//      System.out.println("frontier size: " + frontier.size());
+      visited.add(currentGrid.compactString());
+//      System.out.println("visited size: " + visited.size());
+      System.out.println(currentGrid.compactString());
+
+      if (currentGrid.isSolved()) {
+        return currentGrid;
+      }
+
+      List<ISquareSudokuGrid> neighbors = new ArrayList<>();
+      ISquareSudokuGrid forcedNeighbor = currentGrid.copy();
+      boolean invalid = false;
+      boolean forced = false;
+      // generate neighbors
+      for (int r = 0; r < currentGrid.getDimension(); r++) {
+        for (int c = 0; c < currentGrid.getDimension(); c++) {
+          if (!currentGrid.isFixed(r, c)) {
+            Set<Integer> candidates = currentGrid.getCandidateValues(r, c);
+            if (candidates.size() == 0) {
+              invalid = true;
+              continue;
+            } else if (candidates.size() == 1) {
+              forced = true;
+              Integer[] candidatesArray = new Integer[candidates.size()];
+              candidates.toArray(candidatesArray);
+              forcedNeighbor.setValue(r, c, candidatesArray[0]);
+            }
+            for (int candidate : candidates) {
+              ISquareSudokuGrid gridCopy = currentGrid.copy();
+              gridCopy.setValue(r, c, candidate);
+              neighbors.add(gridCopy);
+            }
+          }
+        }
+      }
+
+      if (invalid) {
+        continue;
+      }
+      if (forced) {
+        if (!visited.contains(forcedNeighbor.compactString())) {
+          // skips the candidates check when checking equality
+          frontier.add(0, forcedNeighbor);
+        }
+        continue;
+      }
+      // adding all neighbors to the frontier in order, to simulate the recursive DFS implementation
+      frontier.addAll(0, neighbors);
+    }
     return null;
   }
 
@@ -138,6 +208,7 @@ public class BruteForceSolver implements ISquareSudokuSolver {
         continue;
       }
       // add neighbors that haven't been visited to the frontier
+      // TODO try adding all neighbors to the frontier in order, to simulate the recursive DFS implementation
       for (ISquareSudokuGrid neighbor : neighbors) {
         if (!visited.contains(neighbor)) {
           // skips the candidates check when checking equality
