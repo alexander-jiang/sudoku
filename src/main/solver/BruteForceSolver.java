@@ -72,69 +72,72 @@ public class BruteForceSolver implements ISquareSudokuSolver {
       return grid;
     }
 
-    // storing the compact string representation of each state instead of the full Java object
-    Set<String> visited = new HashSet<>();
-    List<ISquareSudokuGrid> frontier = new LinkedList<>();
-    frontier.add(grid);
-
-    while (!frontier.isEmpty()) {
-      ISquareSudokuGrid currentGrid = frontier.remove(0);
-      if (!currentGrid.checkBasicConstraints()) {
+    ISquareSudokuGrid gridCopy = grid.copy();
+    int r = 0;
+    int c = 0;
+    while (r < 9 && c < 9) {
+      // Ignore the given clues in the original grid
+      if (grid.isFixed(r, c)) {
+        int c_new = (c + 1) % 9;
+        if (c_new == 0) {
+          r++;
+        }
+        c = c_new;
         continue;
       }
-      if (visited.contains(currentGrid.compactString())) {
-        continue;
-      }
-//      System.out.println("frontier size: " + frontier.size());
-      visited.add(currentGrid.compactString());
-//      System.out.println("visited size: " + visited.size());
-      System.out.println(currentGrid.compactString());
 
-      if (currentGrid.isSolved()) {
-        return currentGrid;
+      // Start trying candidate values
+      int nextCandidate = 0;
+      if (gridCopy.isFixed(r, c)) {
+        nextCandidate = gridCopy.getValue(r, c);
       }
 
-      List<ISquareSudokuGrid> neighbors = new ArrayList<>();
-      ISquareSudokuGrid forcedNeighbor = currentGrid.copy();
-      boolean invalid = false;
-      boolean forced = false;
-      // generate neighbors
-      for (int r = 0; r < currentGrid.getDimension(); r++) {
-        for (int c = 0; c < currentGrid.getDimension(); c++) {
-          if (!currentGrid.isFixed(r, c)) {
-            Set<Integer> candidates = currentGrid.getCandidateValues(r, c);
-            if (candidates.size() == 0) {
-              invalid = true;
-              continue;
-            } else if (candidates.size() == 1) {
-              forced = true;
-              Integer[] candidatesArray = new Integer[candidates.size()];
-              candidates.toArray(candidatesArray);
-              forcedNeighbor.setValue(r, c, candidatesArray[0]);
-            }
-            for (int candidate : candidates) {
-              ISquareSudokuGrid gridCopy = currentGrid.copy();
-              gridCopy.setValue(r, c, candidate);
-              neighbors.add(gridCopy);
-            }
-          }
+      boolean placed = false;
+      for (int candidate = nextCandidate + 1; candidate <= 9; candidate++) {
+        // clear the cell value
+        gridCopy.clearValue(r, c);
+
+        // can the candidate value be placed in gridCopy without violating constraints?
+        if (gridCopy.peekConstraintsOnPlace(r, c, candidate)) {
+          gridCopy.setValue(r, c, candidate);
+          System.out.printf("Trying candidate %d at (%d, %d)%n", candidate, r, c);
+          placed = true;
+          break;
         }
       }
-
-      if (invalid) {
-        continue;
-      }
-      if (forced) {
-        if (!visited.contains(forcedNeighbor.compactString())) {
-          // skips the candidates check when checking equality
-          frontier.add(0, forcedNeighbor);
+      if (placed) {
+        int c_new = (c + 1) % 9;
+        if (c_new == 0) {
+          r++;
         }
+        c = c_new;
         continue;
       }
-      // adding all neighbors to the frontier in order, to simulate the recursive DFS implementation
-      frontier.addAll(0, neighbors);
+
+      // no more candidates can be tried, clear this cell and go back to the previous
+      // non-given cell and try the next value
+      gridCopy.clearValue(r, c);
+      do {
+        if (c > 0) {
+          c -= 1;
+        } else if (r > 0) {
+          c = 8;
+          r -= 1;
+        } else {
+          // We've failed to find a solution!
+          System.out.println("backtracked to the end with no solution!!");
+          return null;
+        }
+      } while (grid.isFixed(r, c));
+      System.out.printf("Exhausted candidates, backtracking to cell (%d, %d)%n", r, c);
     }
-    return null;
+
+    if (gridCopy.isSolved()) {
+      return gridCopy;
+    } else {
+      System.out.println("grid copy is not a solution!");
+      return null;
+    }
   }
 
   @Override
@@ -145,77 +148,99 @@ public class BruteForceSolver implements ISquareSudokuSolver {
       return solutions;
     }
 
-    Set<ISquareSudokuGrid> visited = new HashSet<>();
-    List<ISquareSudokuGrid> frontier = new LinkedList<>();
-    frontier.add(grid);
-
-    while (!frontier.isEmpty()) {
-      ISquareSudokuGrid currentGrid = frontier.remove(0);
-      if (!currentGrid.checkBasicConstraints()) {
-        continue;
-      }
-      if (visited.contains(currentGrid)) {
-        continue;
-      }
-//      System.out.println("frontier size: " + frontier.size());
-      visited.add(currentGrid);
-//      System.out.println("visited size: " + visited.size());
-//      System.out.println(currentGrid.gridToString());
-
-      if (currentGrid.isSolved()) {
-        if (!solutions.contains(currentGrid)) {
-          System.out.println("found solution!");
-          solutions.add(currentGrid);
-        }
-        continue;
-      }
-
-      List<ISquareSudokuGrid> neighbors = new ArrayList<>();
-      ISquareSudokuGrid forcedNeighbor = currentGrid.copy();
-      boolean invalid = false;
-      boolean forced = false;
-      // generate neighbors
-      for (int r = 0; r < currentGrid.getDimension(); r++) {
-        for (int c = 0; c < currentGrid.getDimension(); c++) {
-          if (!currentGrid.isFixed(r, c)) {
-            Set<Integer> candidates = currentGrid.getCandidateValues(r, c);
-            if (candidates.size() == 0) {
-              invalid = true;
-              continue;
-            } else if (candidates.size() == 1) {
-              forced = true;
-              Integer[] candidatesArray = new Integer[candidates.size()];
-              candidates.toArray(candidatesArray);
-              forcedNeighbor.setValue(r, c, candidatesArray[0]);
-            }
-            for (int candidate : candidates) {
-              ISquareSudokuGrid gridCopy = currentGrid.copy();
-              gridCopy.setValue(r, c, candidate);
-              neighbors.add(gridCopy);
-            }
-          }
-        }
-      }
-
-      if (invalid) {
-        continue;
-      }
-      if (forced) {
-        if (!visited.contains(forcedNeighbor)) {
-          // skips the candidates check when checking equality
-          frontier.add(0, forcedNeighbor);
-        }
-        continue;
-      }
-      // add neighbors that haven't been visited to the frontier
-      // TODO try adding all neighbors to the frontier in order, to simulate the recursive DFS implementation
-      for (ISquareSudokuGrid neighbor : neighbors) {
-        if (!visited.contains(neighbor)) {
-          // skips the candidates check when checking equality
-          frontier.add(0, neighbor);
+    int[][] nextCandidates = new int[9][9];
+    for (int r = 0; r < 9; r++) {
+      for (int c = 0; c < 9; c++) {
+        if (grid.isFixed(r, c)) {
+          nextCandidates[r][c] = 10;
+        } else {
+          nextCandidates[r][c] = 1;
         }
       }
     }
+
+    ISquareSudokuGrid gridCopy = grid.copy();
+    int r = 0;
+    int c = 0;
+    while (true) {
+      if (gridCopy.isSolved()) {
+        ISquareSudokuGrid solution = gridCopy.copy();
+        solutions.add(solution);
+      }
+
+      boolean exhaustedAllCandidates = true;
+      for (int i = 0; i < 9; i++) {
+        for (int j = 0; j < 9; j++) {
+          if (nextCandidates[i][j] <= 9) {
+            exhaustedAllCandidates = false;
+            break;
+          }
+        }
+      }
+      if (exhaustedAllCandidates) {
+        break;
+      }
+
+      // Ignore the given clues in the original grid
+      if (grid.isFixed(r, c)) {
+        if (r != 8 || c != 8) {
+          int c_new = (c + 1) % 9;
+          if (c_new == 0) {
+            r++;
+          }
+          c = c_new;
+        }
+        continue;
+      }
+
+      // Start trying candidate values
+      int nextCandidate = nextCandidates[r][c];
+
+      boolean placed = false;
+      for (int candidate = nextCandidate; candidate <= 9; candidate++) {
+        // clear the cell value
+        gridCopy.clearValue(r, c);
+
+        // update the next candidate value for future iterations
+        nextCandidates[r][c]++;
+
+        // can the candidate value be placed in gridCopy without violating constraints?
+        if (gridCopy.peekConstraintsOnPlace(r, c, candidate)) {
+          gridCopy.setValue(r, c, candidate);
+          System.out.printf("Trying candidate %d at (%d, %d)%n", candidate, r, c);
+          placed = true;
+          break;
+        }
+      }
+      if (placed) {
+        if (r != 8 || c != 8) {
+          int c_new = (c + 1) % 9;
+          if (c_new == 0) {
+            r++;
+          }
+          c = c_new;
+        }
+        continue;
+      }
+
+      // no more candidates can be tried, clear this cell and go back to the previous
+      // non-given cell and try the next value
+      gridCopy.clearValue(r, c);
+      nextCandidates[r][c] = 1;
+      do {
+        if (c > 0) {
+          c -= 1;
+        } else if (r > 0) {
+          c = 8;
+          r -= 1;
+        } else {
+          System.out.println("backtracked to the end");
+          return solutions;
+        }
+      } while (grid.isFixed(r, c));
+      System.out.printf("Exhausted candidates, backtracking to cell (%d, %d)%n", r, c);
+    }
+
     return solutions;
   }
 }

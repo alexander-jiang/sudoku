@@ -46,6 +46,14 @@ public interface ISquareSudokuGrid {
   void setValue(int i, int j, int newValue);
 
   /**
+   * Updates the grid at (i, j) to remove the fixed value. Also updates the candidates
+   * of that element based on basic row, column, and box constraints.
+   * @param i the row coordinate of the element in the grid
+   * @param j the column coordinate of the element in the grid
+   */
+  void clearValue(int i, int j);
+
+  /**
    * Returns the row-major coordinates of the box that contains the element at (i, j) in the grid.
    * The two integers in the ordered pair must be between 0 and sqrt(N) - 1 inclusive.
    * @param i the row coordinate of the element in the grid
@@ -136,6 +144,16 @@ public interface ISquareSudokuGrid {
   boolean isSolved();
 
   boolean checkBasicConstraints();
+
+  /**
+   * Returns whether a candidate value could be placed into the given cell without violating
+   * basic constraints
+   * @param i  the row coordinate of the cell to place in
+   * @param j  the column coordinate of the cell to place in
+   * @param value  the new value to place in the cell
+   * @return  whether the candidate value could be placed without violating basic constraints
+   */
+  boolean peekConstraintsOnPlace(int i, int j, int value);
 
   /**
    * Returns a string representation of the Sudoku grid.

@@ -126,6 +126,23 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
   }
 
   @Override
+  public void clearValue(int i, int j) {
+    if (!isFixed(i, j)) {
+      return;
+    }
+
+    values[i][j] = 0;
+
+    // Reset candidates for this element based on  row, column, and box constraints
+    for (int candidate = 1; candidate <= 9; candidate++) {
+      setCandidate(i, j, candidate, false);
+      if (peekConstraintsOnPlace(i, j, candidate)) {
+        setCandidate(i, j, candidate, true);;
+      }
+    }
+  }
+
+  @Override
   public Pair<Integer, Integer> getBoxCoordinates(int i, int j) {
     return new Pair<>(i / 3, j / 3); // should depend on N
   }
@@ -257,6 +274,40 @@ public class StandardSudokuGrid implements ISquareSudokuGrid {
             boxValues.add(cellValue);
           }
         }
+      }
+    }
+
+    return true;
+  }
+
+  @Override
+  public boolean peekConstraintsOnPlace(int i, int j, int value) {
+    // check that there is not already a value in the cell
+    if (isFixed(i, j)) {
+      return false;
+    }
+
+    // check that the value is not already in the row
+    List<Pair<Integer, Integer>> rowElementCoords = getRowElements(i, j);
+    for (Pair<Integer, Integer> coords : rowElementCoords) {
+      if (getValue(coords.first(), coords.second()) == value) {
+        return false;
+      }
+    }
+
+    // check that the value is not already in the column
+    List<Pair<Integer, Integer>> columnElementCoords = getColumnElements(i, j);
+    for (Pair<Integer, Integer> coords : columnElementCoords) {
+      if (getValue(coords.first(), coords.second()) == value) {
+        return false;
+      }
+    }
+
+    // check that the value is not already in the box
+    List<Pair<Integer, Integer>> boxElementCoords = getBoxElements(i, j);
+    for (Pair<Integer, Integer> coords : boxElementCoords) {
+      if (getValue(coords.first(), coords.second()) == value) {
+        return false;
       }
     }
 
