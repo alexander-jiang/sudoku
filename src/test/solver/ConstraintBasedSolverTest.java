@@ -2,11 +2,13 @@ package test.solver;
 
 import main.grid.model.ISquareSudokuGrid;
 import main.grid.model.StandardSudokuGrid;
+import main.solver.BruteForceSolver;
 import main.solver.ConstraintBasedSolver;
 import main.solver.ISquareSudokuSolver;
 import main.util.Pair;
 import org.junit.Test;
 
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.Assert.*;
@@ -242,5 +244,21 @@ public class ConstraintBasedSolverTest {
     ISquareSudokuGrid solution =
         new StandardSudokuGrid("376598421214736598859241763193852647627413859548679132961385274732164985485927316");
     assertEquals(solution.gridToString(), solved.gridToString());
+  }
+
+  @Test
+  public void findMultipleSolutions() throws Exception {
+    ISquareSudokuGrid improperPuzzle =
+            new StandardSudokuGrid("2957438614318659..8761925433874592166123874955492167387635241899286713541549386..");
+
+    ISquareSudokuSolver solver = new BruteForceSolver(improperPuzzle);
+    List<ISquareSudokuGrid> solutions = solver.findAllSolutions();
+    ISquareSudokuGrid solution1 =
+            new StandardSudokuGrid("295743861431865927876192543387459216612387495549216738763524189928671354154938672");
+    ISquareSudokuGrid solution2 =
+            new StandardSudokuGrid("295743861431865972876192543387459216612387495549216738763524189928671354154938627");
+    assertTrue(solutions.contains(solution1));
+    assertTrue(solutions.contains(solution2));
+    assertEquals(2, solutions.size());
   }
 }

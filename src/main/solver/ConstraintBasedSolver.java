@@ -179,13 +179,26 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
             DisplayStrings.setToString(grid.getCandidateValues(r, c)));
       }
     }
+
+    if (!grid.isSolved()) {
+      BruteForceSolver bruteForceSolver = new BruteForceSolver(grid);
+      return bruteForceSolver.solveIterative();
+    }
     return grid;
   }
 
   @Override
   public List<ISquareSudokuGrid> findAllSolutions() {
-    System.out.println("constraint based solver doesn't implement findAllSolutions!");
-    return null;
+    ISquareSudokuGrid firstAttempt = this.solve();
+
+    if (firstAttempt.isSolved()) {
+      List<ISquareSudokuGrid> solutions = new ArrayList<>();
+      solutions.add(firstAttempt);
+      return solutions;
+    }
+
+    BruteForceSolver bruteForceSolver = new BruteForceSolver(firstAttempt);
+    return bruteForceSolver.findAllSolutions();
   }
 
   private boolean checkForHiddenSingle(ISquareSudokuGrid grid, int r, int c, List<Pair<Integer, Integer>> groupCoordinates) {
