@@ -82,10 +82,10 @@ public class BruteForceSolverTest {
 
   @Test
   public void solveXWingIterative() throws Exception {
-    ISquareSudokuGrid xWing =
-            new StandardSudokuGrid(".41729.3.769..34.2.3264.7194.39..17.6.7..49.319537..24214567398376.9.541958431267");
     ISquareSudokuGrid solution =
             new StandardSudokuGrid("841729635769153482532648719423985176687214953195376824214567398376892541958431267");
+    ISquareSudokuGrid xWing =
+            new StandardSudokuGrid(".41729.3.769..34.2.3264.7194.39..17.6.7..49.319537..24214567398376.9.541958431267");
 
     ISquareSudokuSolver solver = new BruteForceSolver(xWing);
     ISquareSudokuGrid solvedIterative = ((BruteForceSolver) solver).solveIterative();
