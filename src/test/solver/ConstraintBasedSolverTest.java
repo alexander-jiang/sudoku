@@ -314,7 +314,76 @@ public class ConstraintBasedSolverTest {
   }
 
   @Test
-  public void solveNakedSubsets() throws Exception {
+  public void solveNakedPairInRow() throws Exception {
+    // source: HoDoKu solving techniques: http://hodoku.sourceforge.net/en/tech_naked.php#n2n2
+    ISquareSudokuGrid nakedPair =
+            new StandardSudokuGrid("7..849.3.928135..64..267.896427839513974516288156923..2.4516.931....8.6.5....4.1.");
+    ISquareSudokuGrid solution =
+            new StandardSudokuGrid("761849235928135476453267189642783951397451628815692347284516793179328564536974812");
+
+    ConstraintBasedSolver solver = new ConstraintBasedSolver(nakedPair);
+    boolean foundNakedPair = solver.checkForNakedSet(nakedPair, nakedPair.getRowElements(7, 2));
+    assertTrue(foundNakedPair);
+    ISquareSudokuGrid solved = solver.solve();
+
+    assertTrue(solved.isSolved());
+    assertEquals(solution.gridToString(), solved.gridToString());
+  }
+
+  @Test
+  public void solveNakedPairInBox() throws Exception {
+    // source: HoDoKu solving techniques: http://hodoku.sourceforge.net/en/tech_naked.php#n2n2
+    ISquareSudokuGrid nakedPair =
+            new StandardSudokuGrid("687..4523953..261414235697831...724676....3.5.2....7.1.96..1.3223.....57.7.....69");
+    ISquareSudokuGrid solution =
+            new StandardSudokuGrid("687914523953872614142356978319587246764129385825463791596741832231698457478235169");
+
+    ConstraintBasedSolver solver = new ConstraintBasedSolver(nakedPair);
+    boolean foundNakedPair = solver.checkForNakedSet(nakedPair, nakedPair.getBoxElements(3, 4));
+    assertTrue(foundNakedPair);
+    ISquareSudokuGrid solved = solver.solve();
+
+    assertTrue(solved.isSolved());
+    assertEquals(solution.gridToString(), solved.gridToString());
+  }
+
+  @Test
+  public void solveNakedTripleInColumn() throws Exception {
+    // source: HoDoKu solving techniques: http://hodoku.sourceforge.net/en/tech_naked.php#n3n3
+    ISquareSudokuGrid nakedTriple =
+            new StandardSudokuGrid("...29438....17864.48.3561....48375.1...4157..5..629834953782416126543978.4.961253");
+    ISquareSudokuGrid solution =
+            new StandardSudokuGrid("615294387392178645487356129264837591839415762571629834953782416126543978748961253");
+
+    ConstraintBasedSolver solver = new ConstraintBasedSolver(nakedTriple);
+    boolean foundNakedTriple = solver.checkForNakedSet(nakedTriple, nakedTriple.getColumnElements(1, 1));
+    assertTrue(foundNakedTriple);
+    ISquareSudokuGrid solved = solver.solve();
+
+    assertTrue(solved.isSolved());
+    assertEquals(solution.gridToString(), solved.gridToString());
+  }
+
+  @Test
+  public void solveNakedTripleInBox() throws Exception {
+    // source: HoDoKu solving techniques: http://hodoku.sourceforge.net/en/tech_naked.php#n3n3
+    ISquareSudokuGrid nakedTriple =
+            new StandardSudokuGrid("39....7........65.5.7...349.4938.5.66.1.54983853...4..9..8..134..294.8654.....297");
+    ISquareSudokuGrid solution =
+            new StandardSudokuGrid("396425718184739652527168349249381576671254983853697421965872134712943865438516297");
+
+    ConstraintBasedSolver solver = new ConstraintBasedSolver(nakedTriple);
+    boolean foundNakedTriple = solver.checkForNakedSet(nakedTriple, nakedTriple.getBoxElements(0, 4));
+    assertTrue(foundNakedTriple);
+    ISquareSudokuGrid solved = solver.solve();
+
+    assertTrue(solved.isSolved());
+    assertEquals(solution.gridToString(), solved.gridToString());
+  }
+
+  @Test
+  public void solveNakedQuadInRow() throws Exception {
+    // source: HoDoKu solving techniques: http://hodoku.sourceforge.net/en/tech_naked.php#n4
     ISquareSudokuGrid nakedQuad = new StandardSudokuGrid(new int[][] {
         {0, 1, 0, 7, 2, 0, 5, 6, 3},
         {0, 5, 6, 0, 3, 0, 2, 4, 7},
@@ -327,10 +396,40 @@ public class ConstraintBasedSolverTest {
         {0, 0, 5, 8, 7, 0, 0, 0, 0}
     });
 
-    ISquareSudokuSolver solver = new ConstraintBasedSolver(nakedQuad);
+    ConstraintBasedSolver solver = new ConstraintBasedSolver(nakedQuad);
+    boolean foundNakedSet = solver.checkForNakedSet(nakedQuad, nakedQuad.getRowElements(7, 0));
+    assertTrue(foundNakedSet);
+
     ISquareSudokuGrid solved = solver.solve();
     ISquareSudokuGrid solution =
         new StandardSudokuGrid("419728563856931247732546189693287415247615938581394672374152896928463751165879324");
+
+    assertTrue(solved.isSolved());
+    assertEquals(solution.gridToString(), solved.gridToString());
+  }
+
+  @Test
+  public void solveNakedQuadInBox() throws Exception {
+    // source: HoDoKu solving techniques: http://hodoku.sourceforge.net/en/tech_naked.php#n4
+    ISquareSudokuGrid nakedQuad = new StandardSudokuGrid(new int[][] {
+            {5, 3, 2, 7, 8, 6, 0, 0, 0},
+            {9, 7, 8, 2, 4, 1, 0, 6, 0},
+            {0, 0, 1, 9, 5, 3, 2, 8, 7},
+            {0, 2, 5, 4, 0, 0, 6, 7, 0},
+            {0, 0, 3, 6, 1, 7, 0, 5, 2},
+            {7, 0, 0, 5, 0, 0, 0, 0, 0},
+            {0, 0, 0, 1, 0, 0, 0, 0, 0},
+            {0, 0, 0, 8, 0, 5, 1, 0, 6},
+            {0, 0, 0, 3, 0, 0, 0, 9, 8}
+    });
+
+    ConstraintBasedSolver solver = new ConstraintBasedSolver(nakedQuad);
+    boolean foundNakedSet = solver.checkForNakedSet(nakedQuad, nakedQuad.getBoxElements(6, 2));
+    assertTrue(foundNakedSet);
+
+    ISquareSudokuGrid solved = solver.solve();
+    ISquareSudokuGrid solution =
+            new StandardSudokuGrid("532786419978241365641953287125498673483617952769532841856129734394875126217364598");
 
     assertTrue(solved.isSolved());
     assertEquals(solution.gridToString(), solved.gridToString());
@@ -342,10 +441,31 @@ public class ConstraintBasedSolverTest {
     ISquareSudokuGrid xWing =
         new StandardSudokuGrid(".41729.3.769..34.2.3264.7194.39..17.6.7..49.319537..24214567398376.9.541958431267");
 
-    ISquareSudokuSolver solver = new ConstraintBasedSolver(xWing);
+    ConstraintBasedSolver solver = new ConstraintBasedSolver(xWing);
+    boolean foundXWing = solver.checkForXWingInRows(xWing, 5);
+    assertTrue(foundXWing);
+
     ISquareSudokuGrid solved = solver.solve();
     ISquareSudokuGrid solution =
         new StandardSudokuGrid("841729635769153482532648719423985176687214953195376824214567398376892541958431267");
+
+    assertTrue(solved.isSolved());
+    assertEquals(solution.gridToString(), solved.gridToString());
+  }
+
+  @Test
+  public void solveXWingInColumns() throws Exception {
+    // source: HoDoKu solving techniques: http://hodoku.sourceforge.net/en/tech_fishb.php#bf2
+    ISquareSudokuGrid xWing =
+            new StandardSudokuGrid("98..62753.65..3...327.5...679..3.5...5...9...832.45..9673591428249.87..5518.2...7");
+
+    ConstraintBasedSolver solver = new ConstraintBasedSolver(xWing);
+    boolean foundXWing = solver.checkForXWingInColumns(xWing, 1);
+    assertTrue(foundXWing);
+
+    ISquareSudokuGrid solved = solver.solve();
+    ISquareSudokuGrid solution =
+            new StandardSudokuGrid("981462753465713892327958146794236581156879234832145679673591428249687315518324967");
 
     assertTrue(solved.isSolved());
     assertEquals(solution.gridToString(), solved.gridToString());
@@ -359,7 +479,9 @@ public class ConstraintBasedSolverTest {
     ISquareSudokuGrid solution =
             new StandardSudokuGrid("");
 
-    ISquareSudokuSolver solver = new ConstraintBasedSolver(swordfish);
+    ConstraintBasedSolver solver = new ConstraintBasedSolver(swordfish);
+    boolean foundSwordfish = solver.checkForBasicFishInRows(swordfish, 2, 3);
+    assertTrue(foundSwordfish);
     ISquareSudokuGrid solved = solver.solve();
 
     assertTrue(solved.isSolved());

@@ -20,6 +20,8 @@ public class BruteForceSolverTest {
 
     ISquareSudokuSolver solver = new BruteForceSolver(pointingLockedCandidate);
     ISquareSudokuGrid solved = solver.solve();
+
+    assertTrue(solved.isSolved());
     assertEquals(solution.gridToString(), solved.gridToString());
   }
 
@@ -32,11 +34,9 @@ public class BruteForceSolverTest {
 
     ISquareSudokuSolver solver = new BruteForceSolver(pointingLockedCandidate);
     ISquareSudokuGrid solvedIterative = ((BruteForceSolver) solver).solveIterative();
-    assertEquals(solution.gridToString(), solvedIterative.gridToString());
 
-//    List<ISquareSudokuGrid> solutions = solver.findAllSolutions();
-//    assertTrue(solutions.contains(solution));
-//    assertEquals(1, solutions.size());
+    assertTrue(solvedIterative.isSolved());
+    assertEquals(solution.gridToString(), solvedIterative.gridToString());
   }
 
   @Test
@@ -61,11 +61,9 @@ public class BruteForceSolverTest {
     ISquareSudokuSolver solver = new BruteForceSolver(skyscraper);
     // TODO print out the steps of the recursive solver and compare to the iterative solver, why does the iterative solver not make progress?
     ISquareSudokuGrid solvedIterative = ((BruteForceSolver) solver).solveIterative();
-    assertEquals(solution.gridToString(), solvedIterative.gridToString());
 
-//    List<ISquareSudokuGrid> solutions = solver.findAllSolutions();
-//    assertTrue(solutions.contains(solution));
-//    assertEquals(1, solutions.size());
+    assertTrue(solvedIterative.isSolved());
+    assertEquals(solution.gridToString(), solvedIterative.gridToString());
   }
 
   @Test
@@ -77,6 +75,8 @@ public class BruteForceSolverTest {
 
     ISquareSudokuSolver solver = new BruteForceSolver(xWing);
     ISquareSudokuGrid solved = solver.solve();
+
+    assertTrue(solved.isSolved());
     assertEquals(solution.gridToString(), solved.gridToString());
   }
 
@@ -89,11 +89,9 @@ public class BruteForceSolverTest {
 
     ISquareSudokuSolver solver = new BruteForceSolver(xWing);
     ISquareSudokuGrid solvedIterative = ((BruteForceSolver) solver).solveIterative();
-    assertEquals(solution.gridToString(), solvedIterative.gridToString());
 
-//    List<ISquareSudokuGrid> solutions = solver.findAllSolutions();
-//    assertTrue(solutions.contains(solution));
-//    assertEquals(1, solutions.size());
+    assertTrue(solvedIterative.isSolved());
+    assertEquals(solution.gridToString(), solvedIterative.gridToString());
   }
 
   @Test
@@ -110,5 +108,7 @@ public class BruteForceSolverTest {
     assertTrue(solutions.contains(solution1));
     assertTrue(solutions.contains(solution2));
     assertEquals(2, solutions.size());
+    assertTrue(solutions.get(0).isSolved());
+    assertTrue(solutions.get(1).isSolved());
   }
 }

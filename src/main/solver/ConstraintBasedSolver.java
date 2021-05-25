@@ -173,7 +173,7 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
     // into the base sets (i.e. can be eliminated from other cells)
     updated = false;
     for (int value = 1; value <= grid.getDimension(); value++) {
-      if (checkForBasicFishInRows(grid, value, 2)) {
+      if (checkForXWingInRows(grid, value)) {
         updated = true;
       }
       if (checkForXWingInColumns(grid, value)) {
@@ -615,6 +615,59 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
     return updated;
   }
 
+
+  public boolean checkForXWingInRows(ISquareSudokuGrid grid, Integer focusValue) {
+    // try to find two rows so that the only candidates for that digit in those rows are
+    // in the same columns
+    List<Set<Integer>> rowCandidateColumns = new ArrayList<>();
+
+    for (int r = 0; r < grid.getDimension(); r++) {
+      Set<Integer> candidateColumns = new HashSet<>();
+      for (int c = 0; c < grid.getDimension(); c++) {
+        if (grid.isFixed(r, c) && grid.getValue(r, c) == focusValue) {
+          // this digit is already fixed in this column, skip
+          candidateColumns = new HashSet<>();
+          break;
+        }
+
+        if (!grid.isFixed(r, c) && grid.getCandidateValues(r, c).contains(focusValue)) {
+          candidateColumns.add(c);
+        }
+      }
+      rowCandidateColumns.add(candidateColumns);
+    }
+
+    boolean updated = false;
+    for (int r1 = 0; r1 < grid.getDimension(); r1++) {
+      if (rowCandidateColumns.get(r1).size() == 2) {
+        for (int r2 = r1 + 1; r2 < grid.getDimension(); r2++) {
+          if (rowCandidateColumns.get(r2).size() == 2 && rowCandidateColumns.get(r1).equals(rowCandidateColumns.get(r2))) {
+            // found an X-wing, eliminate the value as a candidate from cells in columns specified by
+            // rowCandidateColumns.get(r1) and that are not in rows r1 or r2
+            Integer[] dummyArray = new Integer[]{};
+            Integer[] columns = rowCandidateColumns.get(r1).toArray(dummyArray);
+            int c1 = columns[0], c2 = columns[1];
+            System.out.printf("Found X-wing! Value: %d in rows %d & %d is locked to columns %d & %d%n", focusValue, r1, r2, c1, c2);
+            List<Pair<Integer, Integer>> elementCoords = grid.getColumnElements(r1, c1);
+            elementCoords.addAll(grid.getColumnElements(r1, c2));
+
+            for (Pair<Integer, Integer> coord : elementCoords) {
+              int r = coord.first(), c = coord.second();
+              if (r == r1 || r == r2) {
+                continue;
+              }
+              if (!grid.isFixed(r, c) && grid.getCandidateValues(r, c).contains(focusValue)) {
+                grid.setCandidate(r, c, focusValue, false);
+                updated = true;
+              }
+            }
+          }
+        }
+      }
+    }
+    return updated;
+  }
+
   public boolean checkForXWingInColumns(ISquareSudokuGrid grid, Integer focusValue) {
     // try to find two columns so that the only candidates for that digit in those cols are
     // in the same rows
@@ -630,7 +683,7 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
         }
 
         if (!grid.isFixed(r, c) && grid.getCandidateValues(r, c).contains(focusValue)) {
-          candidateRows.add(c);
+          candidateRows.add(r);
         }
       }
       columnCandidateRows.add(candidateRows);
@@ -641,14 +694,14 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
       if (columnCandidateRows.get(c1).size() == 2) {
         for (int c2 = c1 + 1; c2 < grid.getDimension(); c2++) {
           if (columnCandidateRows.get(c2).size() == 2 && columnCandidateRows.get(c1).equals(columnCandidateRows.get(c2))) {
-            // found an X-wing, eliminate all candidates in rows specified by columnCandidateRows.get(c1)
-            // that are not present in columns c1 or c2
+            // found an X-wing, eliminate value as a candidate from cells in rows specified by
+            // columnCandidateRows.get(c1) and that are not in columns c1 or c2
             Integer[] dummyArray = new Integer[]{};
             Integer[] rows = columnCandidateRows.get(c1).toArray(dummyArray);
             int r1 = rows[0], r2 = rows[1];
             System.out.printf("Found X-wing! Value: %d in columns %d & %d is locked to rows %d & %d%n", focusValue, c1, c2, r1, r2);
-            List<Pair<Integer, Integer>> elementCoords = grid.getColumnElements(r1, c1);
-            elementCoords.addAll(grid.getColumnElements(r2, c1));
+            List<Pair<Integer, Integer>> elementCoords = grid.getRowElements(r1, c1);
+            elementCoords.addAll(grid.getRowElements(r2, c1));
 
             for (Pair<Integer, Integer> coord : elementCoords) {
               int r = coord.first(), c = coord.second();
