@@ -3,6 +3,7 @@ package main.solver;
 import main.grid.model.ISquareSudokuGrid;
 import main.util.DisplayStrings;
 import main.util.Pair;
+import main.util.SubsetHelper;
 
 import java.util.*;
 
@@ -397,117 +398,112 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
   }
 
   public boolean checkForHiddenSet(ISquareSudokuGrid grid, List<Pair<Integer, Integer>> groupElements) {
+    // how many cells/values in the group are not fixed?
+    int groupCandidateCount = 0;
+
     // Count the occurrences of each candidate in the group.
-    Map<Integer, Integer> candidateOccurrences = new TreeMap<>();
+    Map<Integer, List<Pair<Integer, Integer>>> candidateCoords = new TreeMap<>();
     for (Pair<Integer, Integer> coord : groupElements) {
       if (!grid.isFixed(coord.first(), coord.second())) {
+        groupCandidateCount++;
         for (int candidate : grid.getCandidateValues(coord.first(), coord.second())) {
-          if (candidateOccurrences.containsKey(candidate)) {
-            candidateOccurrences.put(candidate, candidateOccurrences.get(candidate) + 1);
-          } else {
-            candidateOccurrences.put(candidate, 1);
+          if (!candidateCoords.containsKey(candidate)) {
+            candidateCoords.put(candidate, new ArrayList<>());
           }
+          candidateCoords.get(candidate).add(coord);
         }
       }
     }
 
-    // Check each of the values that appear as candidates in this group.
-    for (int candidate : candidateOccurrences.keySet()) {
-      // TODO Should depend on grid.getDimension
-      Set<Integer> candidatesIntersection = new TreeSet<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9));
-      // Find the set intersection of the sets of candidate values for each element
-      // that contains the selected value as a candidate.
-      for (Pair<Integer, Integer> coord : groupElements) {
-        if (!grid.isFixed(coord.first(), coord.second()) && grid.isACandidate(coord.first(), coord.second(), candidate)) {
-          candidatesIntersection.retainAll(grid.getCandidateValues(coord.first(), coord.second()));
+    for (int numCandidates = 2; numCandidates < groupCandidateCount; numCandidates++) {
+      // Search for a hidden n-subset where n is the number of candidates in the hidden subset.
+      List<Integer> eligibleValues = new ArrayList<>();
+      for (Integer value : candidateCoords.keySet()) {
+        // Values that are candidates in more than n cells can't be used to form a hidden n-subset.
+        // Note that values that are fixed (i.e. are not candidates in any cells) cannot form a hidden subset either.
+        if (candidateCoords.get(value).size() <= numCandidates && candidateCoords.get(value).size() > 0) {
+          eligibleValues.add(value);
         }
       }
-      // There needs to be at least as many candidates in the intersection of the candidate sets of elements
-      // that contain the selected value as a candidate as there are occurrences of the selected value as a candidate.
-      if (candidatesIntersection.size() < candidateOccurrences.get(candidate)) {
-        return false;
-      }
 
-      // Count the number of candidates that only appear as candidates in the same elements that
-      // the selected value appears in as a candidate (including the selected value itself).
-      Set<Integer> hiddenSet = new TreeSet<>(candidatesIntersection);
-      for (int candidateInIntersection : candidatesIntersection) {
-        if (candidateOccurrences.get(candidateInIntersection) != (int) candidateOccurrences.get(candidate)) {
-          hiddenSet.remove(candidateInIntersection);
-        }
-      }
-      // There must be exactly as many candidates in the intersection of the candidate sets of elements
-      // that contain the selected value as a candidate as there are occurrences of the selected value as a candidate.
-      if (hiddenSet.size() != candidateOccurrences.get(candidate)) {
-        return false;
-      }
+      // Try all possible subsets of size n.
+      List<List<Integer>> valueSubsets = SubsetHelper.listAllSubsetsOfSize(eligibleValues, numCandidates);
 
-      // If control reaches here, means that the elements that contain the selected value as a candidate
-      // can only have the elements in the intersection as candidate values.
-      System.out.println("Found hidden set! Candidate values: " + DisplayStrings.setToString(hiddenSet));
-//      System.out.println("Group elements and their candidate values:");
-//      for (Pair<Integer, Integer> coords : groupElements) {
-//        System.out.println("Candidates for element (" + coords.first() + ", " + coords.second() + "): " +
-//            DisplayStrings.setToString(grid.getCandidateValues(coords.first(), coords.second())));
-//      }
-
-      // But did we make any progress (i.e. removing a candidate value)?
-      boolean updated = false;
-      for (Pair<Integer, Integer> coord : groupElements) {
-        Set<Integer> elementCandidates = grid.getCandidateValues(coord.first(), coord.second());
-        if (elementCandidates.contains(candidate)) {
-          for (int elementCandidate : elementCandidates) {
-            if (!hiddenSet.contains(elementCandidate)) {
-              grid.setCandidate(coord.first(), coord.second(), elementCandidate, false);
-              updated = true;
-              System.out.println("Removed " + elementCandidate + " as a candidate from element (" +
-                  coord.first() + ", " + coord.second() + ")");
+      for (List<Integer> hiddenSubsetValues : valueSubsets) {
+        List<Pair<Integer, Integer>> hiddenSubsetCoords = new ArrayList<>();
+        for (Integer value : hiddenSubsetValues) {
+          for (Pair<Integer, Integer> candidateCoord : candidateCoords.get(value)) {
+            if (!hiddenSubsetCoords.contains(candidateCoord)) {
+              hiddenSubsetCoords.add(candidateCoord);
             }
           }
         }
-      }
-      if (updated) {
-        return true;
+
+        if (hiddenSubsetCoords.size() == numCandidates) {
+          // Found a hidden n-subset.
+          System.out.println("Found a hidden subset! Candidate values: " + hiddenSubsetValues);
+          System.out.println("Element coordinates: " + hiddenSubsetCoords);
+          System.out.println("Group elements and their candidate values:");
+          for (Pair<Integer, Integer> coords : groupElements) {
+            System.out.println("Candidates for element (" + coords.first() + ", " + coords.second() + "): " +
+                DisplayStrings.setToString(grid.getCandidateValues(coords.first(), coords.second())));
+          }
+
+          // But did we make any progress (i.e. removing a candidate value)?
+          boolean updated = false;
+          for (Pair<Integer, Integer> coord : hiddenSubsetCoords) {
+            Set<Integer> cellCandidates = grid.getCandidateValues(coord.first(), coord.second());
+
+            // for cells within the hidden subset, remove any candidates are not in the set of values
+            for (int cellCandidate : cellCandidates) {
+              if (!hiddenSubsetValues.contains(cellCandidate)) {
+                grid.setCandidate(coord.first(), coord.second(), cellCandidate, false);
+                updated = true;
+                System.out.printf("Removed %d as a candidate from element (%d, %d)%n",
+                        cellCandidate, coord.first(), coord.second());
+              }
+            }
+          }
+          if (updated) {
+            return true;
+          }
+        }
       }
     }
     return false;
   }
 
   public boolean checkForNakedSet(ISquareSudokuGrid grid, List<Pair<Integer, Integer>> groupElements) {
-    Set<Integer> nakedSubset;
-    List<Pair<Integer, Integer>> nakedSubsetCoords;
+    // how many cells/values in the group are not fixed?
     int groupCandidateCount = 0;
     for (Pair<Integer, Integer> coord : groupElements) {
       if (!grid.isFixed(coord.first(), coord.second())) {
         groupCandidateCount++;
       }
     }
+
     for (int numCandidates = 2; numCandidates < groupCandidateCount; numCandidates++) {
       // Search for a naked n-subset where n is the number of candidates in the naked subset.
-      for (Pair<Integer, Integer> source : groupElements) {
-        // Elements with more than n candidate values can't be used to form a naked n-subset.
-        if (!grid.isFixed(source.first(), source.second()) &&
-            grid.getCandidateValues(source.first(), source.second()).size() <= numCandidates) {
-          // Try to build a union of element candidate values (starting with the source element)
-          // such that the number of candidates in the union doesn't exceed numCandidates
-          // (otherwise it's not a naked n-subset).
-          nakedSubset = grid.getCandidateValues(source.first(), source.second());
-          nakedSubsetCoords = new ArrayList<>();
+      List<Pair<Integer, Integer>> eligibleCoords = new ArrayList<>();
+      for (Pair<Integer, Integer> coords : groupElements) {
+        // Cells with more than n candidate values can't be used to form a naked n-subset.
+        if (!grid.isFixed(coords.first(), coords.second()) &&
+                grid.getCandidateValues(coords.first(), coords.second()).size() <= numCandidates) {
+          eligibleCoords.add(coords);
+        }
+      }
 
-          for (Pair<Integer, Integer> coord : groupElements) {
-            if (!grid.isFixed(coord.first(), coord.second())) {
-              Set<Integer> tryToAdd = new TreeSet<>(nakedSubset);
-              tryToAdd.addAll(grid.getCandidateValues(coord.first(), coord.second()));
-              if (tryToAdd.size() <= numCandidates) {
-                nakedSubset = new TreeSet<>(tryToAdd);
-                nakedSubsetCoords.add(coord);
-              }
-            }
-          }
+      // Try all possible subsets of size n.
+      List<List<Pair<Integer, Integer>>> coordSubsets = SubsetHelper.listAllSubsetsOfSize(eligibleCoords, numCandidates);
+      for (List<Pair<Integer, Integer>> nakedSubsetCoords : coordSubsets) {
+        Set<Integer> nakedSubset = new TreeSet<>();
+        for (Pair<Integer, Integer> subsetCoord : nakedSubsetCoords) {
+          nakedSubset.addAll(grid.getCandidateValues(subsetCoord.first(), subsetCoord.second()));
+        }
 
-          if (nakedSubsetCoords.size() == numCandidates) {
-            // Found a naked subset.
-            System.out.println("Found a naked subset! Candidate values: " + DisplayStrings.setToString(nakedSubset));
+        if (nakedSubset.size() == numCandidates) {
+          // Found a naked n-subset.
+          System.out.println("Found a naked subset! Candidate values: " + DisplayStrings.setToString(nakedSubset));
 //            System.out.println("Element coordinates: " + nakedSubsetCoords);
 //            System.out.println("Group elements and their candidate values:");
 //            for (Pair<Integer, Integer> coords : groupElements) {
@@ -515,24 +511,26 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
 //                  DisplayStrings.setToString(grid.getCandidateValues(coords.first(), coords.second())));
 //            }
 
-            // TODO check if the naked subset elements are all in multiple groups (e.g. all in the same row and in the same box)
-            // But did we make any progress (i.e. removing a candidate value)?
-            boolean updated = false;
-            for (Pair<Integer, Integer> coord : groupElements) {
-              if (!grid.isFixed(coord.first(), coord.second()) && !nakedSubsetCoords.contains(coord)) {
-                for (int candidate : nakedSubset) {
-                  if (grid.getCandidateValues(coord.first(), coord.second()).contains(candidate)) {
-                    grid.setCandidate(coord.first(), coord.second(), candidate, false);
-                    updated = true;
-                    System.out.println("Removed " + candidate + " as a candidate from element (" +
-                        coord.first() + ", " + coord.second() + ")");
-                  }
+          // TODO check if the naked subset elements are all in multiple groups (e.g. all in the same row and in the same box)
+          // But did we make any progress (i.e. removing a candidate value)?
+          boolean updated = false;
+          for (Pair<Integer, Integer> coord : groupElements) {
+            if (!grid.isFixed(coord.first(), coord.second()) && !nakedSubsetCoords.contains(coord)) {
+              Set<Integer> cellCandidates = grid.getCandidateValues(coord.first(), coord.second());
+
+              // for cells outside the naked subset, remove any candidates that are in the set of values
+              for (int nakedSubsetValue : nakedSubset) {
+                if (cellCandidates.contains(nakedSubsetValue)) {
+                  grid.setCandidate(coord.first(), coord.second(), nakedSubsetValue, false);
+                  updated = true;
+                  System.out.printf("Removed %d as a candidate from element (%d, %d)%n",
+                          nakedSubsetValue, coord.first(), coord.second());
                 }
               }
             }
-            if (updated) {
-              return true;
-            }
+          }
+          if (updated) {
+            return true;
           }
         }
       }

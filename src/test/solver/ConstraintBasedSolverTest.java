@@ -250,7 +250,6 @@ public class ConstraintBasedSolverTest {
 
   @Test
   public void solveHiddenPairInRow() throws Exception {
-    // TODO failing to find the hidden pair in the first row!
     // source: HoDoKu solving techniques: http://hodoku.sourceforge.net/en/tech_hidden.php#h2
     ISquareSudokuGrid hiddenPair =
             new StandardSudokuGrid("....6........42736..673..4..94....68....964.76.7.5.9231......85.6..8.271..5.1..94");
@@ -263,18 +262,15 @@ public class ConstraintBasedSolverTest {
     assertTrue(foundHiddenSetInBox);
 
     ISquareSudokuGrid solved = solver.solve();
-//    ISquareSudokuGrid solution =
-//            new StandardSudokuGrid("649132758581479326327685914496751832175328649238946175853267491712894563964513287");
+    ISquareSudokuGrid solution =
+            new StandardSudokuGrid("473965812951842736826731549594327168238196457617458923142679385369584271785213694");
 
     assertTrue(solved.isSolved());
-    System.out.println(solved.gridToString());
-    System.out.println(solved.compactString());
-//    assertEquals(solution.gridToString(), solved.gridToString());
+    assertEquals(solution.gridToString(), solved.gridToString());
   }
 
   @Test
   public void solveHiddenQuadInBox() throws Exception {
-    // TODO failing to find the hidden quad in the bottom middle box!
     // source: HoDoKu solving techniques: http://hodoku.sourceforge.net/en/tech_hidden.php#h4
     ISquareSudokuGrid hiddenQuad =
         new StandardSudokuGrid("816573294392......4572.9..6941...5687854961236238...4.279.....1138....7.564....82");
@@ -294,13 +290,18 @@ public class ConstraintBasedSolverTest {
 
   @Test
   public void solveHiddenQuadInColumn() throws Exception {
-    // TODO failing to find the hidden quad in the ninth column!
     // source: HoDoKu solving techniques: http://hodoku.sourceforge.net/en/tech_hidden.php#h4
     ISquareSudokuGrid hiddenQuad =
             new StandardSudokuGrid(".3.....1...8.9....4..6.8......57694....98352....124...276..519....7.9....95...47.");
     System.out.println(hiddenQuad.gridToString());
 
     ConstraintBasedSolver solver = new ConstraintBasedSolver(hiddenQuad);
+
+    // need to find the pointing locked candidate first (2 is locked to the ninth row in the bottom-middle box,
+    // which eliminates 2 as a candidate from one cell in the ninth column)
+    boolean foundPointingLockedCandidates = solver.checkForRowLockedCandidate(hiddenQuad, 2, hiddenQuad.getBoxElements(8, 3));
+    assertTrue(foundPointingLockedCandidates);
+
     boolean foundHiddenSet = solver.checkForHiddenSet(hiddenQuad, hiddenQuad.getColumnElements(0, 8));
     assertTrue(foundHiddenSet);
 
@@ -309,7 +310,6 @@ public class ConstraintBasedSolverTest {
             new StandardSudokuGrid("639247815528391764417658239182576943764983521953124687276435198841769352395812476");
 
     assertTrue(solved.isSolved());
-    System.out.println(solved.gridToString());
     assertEquals(solution.gridToString(), solved.gridToString());
   }
 
