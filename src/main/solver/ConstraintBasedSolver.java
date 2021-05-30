@@ -173,12 +173,14 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
     // in two columns/rows (cover sets). Then, in those cover sets, the digit must be placed
     // into the base sets (i.e. can be eliminated from other cells)
     updated = false;
-    for (int value = 1; value <= grid.getDimension(); value++) {
-      if (checkForXWingInRows(grid, value)) {
-        updated = true;
-      }
-      if (checkForXWingInColumns(grid, value)) {
-        updated = true;
+    for (int fishSize = 2; fishSize <= 4; fishSize++) {
+      for (int value = 1; value <= grid.getDimension(); value++) {
+        if (checkForBasicFishInRows(grid, value, fishSize)) {
+          updated = true;
+        }
+        if (checkForBasicFishInColumns(grid, value, fishSize)) {
+          updated = true;
+        }
       }
     }
     if (updated) {
@@ -442,12 +444,12 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
         if (hiddenSubsetCoords.size() == numCandidates) {
           // Found a hidden n-subset.
           System.out.println("Found a hidden subset! Candidate values: " + hiddenSubsetValues);
-          System.out.println("Element coordinates: " + hiddenSubsetCoords);
-          System.out.println("Group elements and their candidate values:");
-          for (Pair<Integer, Integer> coords : groupElements) {
-            System.out.println("Candidates for element (" + coords.first() + ", " + coords.second() + "): " +
-                DisplayStrings.setToString(grid.getCandidateValues(coords.first(), coords.second())));
-          }
+//          System.out.println("Element coordinates: " + hiddenSubsetCoords);
+//          System.out.println("Group elements and their candidate values:");
+//          for (Pair<Integer, Integer> coords : groupElements) {
+//            System.out.println("Candidates for element (" + coords.first() + ", " + coords.second() + "): " +
+//                DisplayStrings.setToString(grid.getCandidateValues(coords.first(), coords.second())));
+//          }
 
           // But did we make any progress (i.e. removing a candidate value)?
           boolean updated = false;
@@ -540,11 +542,10 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
 
   public boolean checkForBasicFishInRows(ISquareSudokuGrid grid, Integer focusValue, int fishSize) {
     // try to find N rows so that, across all rows, there are only N columns that contain candidates for the digit
-    List<Set<Integer>> rowCandidateColumns = new ArrayList<>();
+    Map<Integer, Set<Integer>> rowCandidateColumns = new HashMap<>();
 
-    // each row has a set of column indices that the digit appears in:
-    // this variable maps from those sets to the count of how many times they appear
-    Map<Set<Integer>, Integer> columnSetCounts = new HashMap<>();
+    // only rows with the candidate in at most N columns are eligible to be a part of the basic fish
+    List<Integer> eligibleRows = new ArrayList<>();
 
     for (int r = 0; r < grid.getDimension(); r++) {
       Set<Integer> candidateColumns = new HashSet<>();
@@ -559,117 +560,57 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
           candidateColumns.add(c);
         }
       }
-      rowCandidateColumns.add(candidateColumns);
-      if (candidateColumns.isEmpty()) {
-        continue;
-      }
-      if (!columnSetCounts.containsKey(candidateColumns)) {
-        columnSetCounts.put(candidateColumns, 1);
-      } else {
-        columnSetCounts.put(candidateColumns, columnSetCounts.get(candidateColumns) + 1);
+      rowCandidateColumns.put(r, candidateColumns);
+      if (candidateColumns.size() <= fishSize && candidateColumns.size() > 0) {
+        eligibleRows.add(r);
       }
     }
 
-    // need to find a combo of the M <= N column sets such that:
-    // - total row counts = N (i.e. there are N rows, the base sets)
-    // - size of the union = N (i.e. in the rows, the value only appears as a candidate in N columns)
+    // need to find a subset of N of the rows such that:
+    // - size of the union of columns = N (i.e. across each of the N rows, the digit only appears as
+    //   a candidate in N columns)
     boolean updated = false;
-    for (Set<Integer> columns : columnSetCounts.keySet()) {
-      int count = columnSetCounts.get(columns);
-      if (columns.size() <= 1 || columns.size() > fishSize) {
-        // not valid for a basic fish of size N
-        continue;
+    List<List<Integer>> rowSubsets = SubsetHelper.listAllSubsetsOfSize(eligibleRows, fishSize);
+    for (List<Integer> rowSubset : rowSubsets) {
+      Set<Integer> columnsUnion = new HashSet<>();
+      for (Integer rowIndex : rowSubset) {
+        columnsUnion.addAll(rowCandidateColumns.get(rowIndex));
       }
 
-      // found a basic fish
-      List<Integer> rows = new ArrayList<>();
-      for (int r = 0; r < grid.getDimension(); r++) {
-        if (rowCandidateColumns.get(r).equals(columns)) {
-          rows.add(r);
-        }
-      }
-      System.out.printf("Found basic fish, size = %d! Value: %d in rows %s is locked to columns %s%n", count, focusValue, rows, columns);
+      if (columnsUnion.size() == fishSize) {
+        // found a basic fish
+        System.out.printf("Found basic fish, size = %d! Value: %d in rows %s is locked to columns %s%n", fishSize, focusValue, rowSubset, DisplayStrings.setToString(columnsUnion));
 
-      // eliminate all candidates in columns (the cover sets)
-      // that are not present in any of the rows (the base sets)
-      List<Pair<Integer, Integer>> elementCoords = new ArrayList<>();
-      for (Integer colIdx : columns) {
-        elementCoords.addAll(grid.getColumnElements(0, colIdx));
-      }
-
-      for (Pair<Integer, Integer> coord : elementCoords) {
-        int r = coord.first(), c = coord.second();
-        if (rows.contains(r)) {
-          continue;
-        }
-        if (!grid.isFixed(r, c) && grid.getCandidateValues(r, c).contains(focusValue)) {
-          grid.setCandidate(r, c, focusValue, false);
-          System.out.printf("Removed candidate %d from (%d, %d)%n", focusValue, r, c);
-          updated = true;
-        }
-      }
-    }
-
-    return updated;
-  }
-
-
-  public boolean checkForXWingInRows(ISquareSudokuGrid grid, Integer focusValue) {
-    // try to find two rows so that the only candidates for that digit in those rows are
-    // in the same columns
-    List<Set<Integer>> rowCandidateColumns = new ArrayList<>();
-
-    for (int r = 0; r < grid.getDimension(); r++) {
-      Set<Integer> candidateColumns = new HashSet<>();
-      for (int c = 0; c < grid.getDimension(); c++) {
-        if (grid.isFixed(r, c) && grid.getValue(r, c) == focusValue) {
-          // this digit is already fixed in this column, skip
-          candidateColumns = new HashSet<>();
-          break;
+        // eliminate all candidates in columns (the cover sets)
+        // that are not present in any of the rows (the base sets)
+        List<Pair<Integer, Integer>> elementCoords = new ArrayList<>();
+        for (Integer colIdx : columnsUnion) {
+          elementCoords.addAll(grid.getColumnElements(0, colIdx));
         }
 
-        if (!grid.isFixed(r, c) && grid.getCandidateValues(r, c).contains(focusValue)) {
-          candidateColumns.add(c);
-        }
-      }
-      rowCandidateColumns.add(candidateColumns);
-    }
-
-    boolean updated = false;
-    for (int r1 = 0; r1 < grid.getDimension(); r1++) {
-      if (rowCandidateColumns.get(r1).size() == 2) {
-        for (int r2 = r1 + 1; r2 < grid.getDimension(); r2++) {
-          if (rowCandidateColumns.get(r2).size() == 2 && rowCandidateColumns.get(r1).equals(rowCandidateColumns.get(r2))) {
-            // found an X-wing, eliminate the value as a candidate from cells in columns specified by
-            // rowCandidateColumns.get(r1) and that are not in rows r1 or r2
-            Integer[] dummyArray = new Integer[]{};
-            Integer[] columns = rowCandidateColumns.get(r1).toArray(dummyArray);
-            int c1 = columns[0], c2 = columns[1];
-            System.out.printf("Found X-wing! Value: %d in rows %d & %d is locked to columns %d & %d%n", focusValue, r1, r2, c1, c2);
-            List<Pair<Integer, Integer>> elementCoords = grid.getColumnElements(r1, c1);
-            elementCoords.addAll(grid.getColumnElements(r1, c2));
-
-            for (Pair<Integer, Integer> coord : elementCoords) {
-              int r = coord.first(), c = coord.second();
-              if (r == r1 || r == r2) {
-                continue;
-              }
-              if (!grid.isFixed(r, c) && grid.getCandidateValues(r, c).contains(focusValue)) {
-                grid.setCandidate(r, c, focusValue, false);
-                updated = true;
-              }
-            }
+        for (Pair<Integer, Integer> coord : elementCoords) {
+          int r = coord.first(), c = coord.second();
+          if (rowSubset.contains(r)) {
+            continue;
+          }
+          if (!grid.isFixed(r, c) && grid.getCandidateValues(r, c).contains(focusValue)) {
+            grid.setCandidate(r, c, focusValue, false);
+            System.out.printf("Removed candidate %d from (%d, %d)%n", focusValue, r, c);
+            updated = true;
           }
         }
       }
     }
+
     return updated;
   }
 
-  public boolean checkForXWingInColumns(ISquareSudokuGrid grid, Integer focusValue) {
-    // try to find two columns so that the only candidates for that digit in those cols are
-    // in the same rows
-    List<Set<Integer>> columnCandidateRows = new ArrayList<>();
+  public boolean checkForBasicFishInColumns(ISquareSudokuGrid grid, Integer focusValue, int fishSize) {
+    // try to find N columns so that, across all columns, there are only N rows that contain candidates for the digit
+    Map<Integer, Set<Integer>> columnCandidateRows = new HashMap<>();
+
+    // only rows with the candidate in at most N columns are eligible to be a part of the basic fish
+    List<Integer> eligibleColumns = new ArrayList<>();
 
     for (int c = 0; c < grid.getDimension(); c++) {
       Set<Integer> candidateRows = new HashSet<>();
@@ -684,37 +625,153 @@ public class ConstraintBasedSolver implements ISquareSudokuSolver {
           candidateRows.add(r);
         }
       }
-      columnCandidateRows.add(candidateRows);
+      columnCandidateRows.put(c, candidateRows);
+      if (candidateRows.size() <= fishSize && candidateRows.size() > 0) {
+        eligibleColumns.add(c);
+      }
     }
 
+    // need to find a subset of N of the columns such that:
+    // - size of the union of rows = N (i.e. across each of the N columns, the digit only appears as
+    //   a candidate in N rows)
     boolean updated = false;
-    for (int c1 = 0; c1 < grid.getDimension(); c1++) {
-      if (columnCandidateRows.get(c1).size() == 2) {
-        for (int c2 = c1 + 1; c2 < grid.getDimension(); c2++) {
-          if (columnCandidateRows.get(c2).size() == 2 && columnCandidateRows.get(c1).equals(columnCandidateRows.get(c2))) {
-            // found an X-wing, eliminate value as a candidate from cells in rows specified by
-            // columnCandidateRows.get(c1) and that are not in columns c1 or c2
-            Integer[] dummyArray = new Integer[]{};
-            Integer[] rows = columnCandidateRows.get(c1).toArray(dummyArray);
-            int r1 = rows[0], r2 = rows[1];
-            System.out.printf("Found X-wing! Value: %d in columns %d & %d is locked to rows %d & %d%n", focusValue, c1, c2, r1, r2);
-            List<Pair<Integer, Integer>> elementCoords = grid.getRowElements(r1, c1);
-            elementCoords.addAll(grid.getRowElements(r2, c1));
+    List<List<Integer>> columnSubsets = SubsetHelper.listAllSubsetsOfSize(eligibleColumns, fishSize);
+    for (List<Integer> columnSubset : columnSubsets) {
+      Set<Integer> rowsUnion = new HashSet<>();
+      for (Integer colIndex : columnSubset) {
+        rowsUnion.addAll(columnCandidateRows.get(colIndex));
+      }
 
-            for (Pair<Integer, Integer> coord : elementCoords) {
-              int r = coord.first(), c = coord.second();
-              if (c == c1 || c == c2) {
-                continue;
-              }
-              if (!grid.isFixed(r, c) && grid.getCandidateValues(r, c).contains(focusValue)) {
-                grid.setCandidate(r, c, focusValue, false);
-                updated = true;
-              }
-            }
+      if (rowsUnion.size() == fishSize) {
+        // found a basic fish
+        System.out.printf("Found basic fish, size = %d! Value: %d in columns %s is locked to rows %s%n", fishSize, focusValue, columnSubset, DisplayStrings.setToString(rowsUnion));
+
+        // eliminate all candidates in columns (the cover sets)
+        // that are not present in any of the rows (the base sets)
+        List<Pair<Integer, Integer>> elementCoords = new ArrayList<>();
+        for (Integer rowIdx : rowsUnion) {
+          elementCoords.addAll(grid.getRowElements(rowIdx, 0));
+        }
+
+        for (Pair<Integer, Integer> coord : elementCoords) {
+          int r = coord.first(), c = coord.second();
+          if (columnSubset.contains(c)) {
+            continue;
+          }
+          if (!grid.isFixed(r, c) && grid.getCandidateValues(r, c).contains(focusValue)) {
+            grid.setCandidate(r, c, focusValue, false);
+            System.out.printf("Removed candidate %d from (%d, %d)%n", focusValue, r, c);
+            updated = true;
           }
         }
       }
     }
+
     return updated;
   }
+
+
+//  public boolean checkForXWingInRows(ISquareSudokuGrid grid, Integer focusValue) {
+//    // try to find two rows so that the only candidates for that digit in those rows are
+//    // in the same columns
+//    List<Set<Integer>> rowCandidateColumns = new ArrayList<>();
+//
+//    for (int r = 0; r < grid.getDimension(); r++) {
+//      Set<Integer> candidateColumns = new HashSet<>();
+//      for (int c = 0; c < grid.getDimension(); c++) {
+//        if (grid.isFixed(r, c) && grid.getValue(r, c) == focusValue) {
+//          // this digit is already fixed in this column, skip
+//          candidateColumns = new HashSet<>();
+//          break;
+//        }
+//
+//        if (!grid.isFixed(r, c) && grid.getCandidateValues(r, c).contains(focusValue)) {
+//          candidateColumns.add(c);
+//        }
+//      }
+//      rowCandidateColumns.add(candidateColumns);
+//    }
+//
+//    boolean updated = false;
+//    for (int r1 = 0; r1 < grid.getDimension(); r1++) {
+//      if (rowCandidateColumns.get(r1).size() == 2) {
+//        for (int r2 = r1 + 1; r2 < grid.getDimension(); r2++) {
+//          if (rowCandidateColumns.get(r2).size() == 2 && rowCandidateColumns.get(r1).equals(rowCandidateColumns.get(r2))) {
+//            // found an X-wing, eliminate the value as a candidate from cells in columns specified by
+//            // rowCandidateColumns.get(r1) and that are not in rows r1 or r2
+//            Integer[] dummyArray = new Integer[]{};
+//            Integer[] columns = rowCandidateColumns.get(r1).toArray(dummyArray);
+//            int c1 = columns[0], c2 = columns[1];
+//            System.out.printf("Found X-wing! Value: %d in rows %d & %d is locked to columns %d & %d%n", focusValue, r1, r2, c1, c2);
+//            List<Pair<Integer, Integer>> elementCoords = grid.getColumnElements(r1, c1);
+//            elementCoords.addAll(grid.getColumnElements(r1, c2));
+//
+//            for (Pair<Integer, Integer> coord : elementCoords) {
+//              int r = coord.first(), c = coord.second();
+//              if (r == r1 || r == r2) {
+//                continue;
+//              }
+//              if (!grid.isFixed(r, c) && grid.getCandidateValues(r, c).contains(focusValue)) {
+//                grid.setCandidate(r, c, focusValue, false);
+//                updated = true;
+//              }
+//            }
+//          }
+//        }
+//      }
+//    }
+//    return updated;
+//  }
+//
+//  public boolean checkForXWingInColumns(ISquareSudokuGrid grid, Integer focusValue) {
+//    // try to find two columns so that the only candidates for that digit in those cols are
+//    // in the same rows
+//    List<Set<Integer>> columnCandidateRows = new ArrayList<>();
+//
+//    for (int c = 0; c < grid.getDimension(); c++) {
+//      Set<Integer> candidateRows = new HashSet<>();
+//      for (int r = 0; r < grid.getDimension(); r++) {
+//        if (grid.isFixed(r, c) && grid.getValue(r, c) == focusValue) {
+//          // this digit is already fixed in this column, skip
+//          candidateRows = new HashSet<>();
+//          break;
+//        }
+//
+//        if (!grid.isFixed(r, c) && grid.getCandidateValues(r, c).contains(focusValue)) {
+//          candidateRows.add(r);
+//        }
+//      }
+//      columnCandidateRows.add(candidateRows);
+//    }
+//
+//    boolean updated = false;
+//    for (int c1 = 0; c1 < grid.getDimension(); c1++) {
+//      if (columnCandidateRows.get(c1).size() == 2) {
+//        for (int c2 = c1 + 1; c2 < grid.getDimension(); c2++) {
+//          if (columnCandidateRows.get(c2).size() == 2 && columnCandidateRows.get(c1).equals(columnCandidateRows.get(c2))) {
+//            // found an X-wing, eliminate value as a candidate from cells in rows specified by
+//            // columnCandidateRows.get(c1) and that are not in columns c1 or c2
+//            Integer[] dummyArray = new Integer[]{};
+//            Integer[] rows = columnCandidateRows.get(c1).toArray(dummyArray);
+//            int r1 = rows[0], r2 = rows[1];
+//            System.out.printf("Found X-wing! Value: %d in columns %d & %d is locked to rows %d & %d%n", focusValue, c1, c2, r1, r2);
+//            List<Pair<Integer, Integer>> elementCoords = grid.getRowElements(r1, c1);
+//            elementCoords.addAll(grid.getRowElements(r2, c1));
+//
+//            for (Pair<Integer, Integer> coord : elementCoords) {
+//              int r = coord.first(), c = coord.second();
+//              if (c == c1 || c == c2) {
+//                continue;
+//              }
+//              if (!grid.isFixed(r, c) && grid.getCandidateValues(r, c).contains(focusValue)) {
+//                grid.setCandidate(r, c, focusValue, false);
+//                updated = true;
+//              }
+//            }
+//          }
+//        }
+//      }
+//    }
+//    return updated;
+//  }
 }

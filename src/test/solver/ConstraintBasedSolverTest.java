@@ -270,6 +270,44 @@ public class ConstraintBasedSolverTest {
   }
 
   @Test
+  public void solveHiddenTripleInBox() throws Exception {
+    // source: HoDoKu solving techniques: http://hodoku.sourceforge.net/en/tech_hidden.php#h3
+    ISquareSudokuGrid hiddenTriple =
+            new StandardSudokuGrid("28....473534827196.71.34.8.3..5...4....34..6.46.79.31..9.2.3654..3..9821....8.937");
+
+    ConstraintBasedSolver solver = new ConstraintBasedSolver(hiddenTriple);
+
+    boolean foundHiddenSetInBox = solver.checkForHiddenSet(hiddenTriple, hiddenTriple.getBoxElements(7, 1));
+    assertTrue(foundHiddenSetInBox);
+
+    ISquareSudokuGrid solved = solver.solve();
+    ISquareSudokuGrid solution =
+            new StandardSudokuGrid("286951473534827196971634285329516748817342569465798312198273654753469821642185937");
+
+    assertTrue(solved.isSolved());
+    assertEquals(solution.gridToString(), solved.gridToString());
+  }
+
+  @Test
+  public void solveHiddenTripleInColumn() throws Exception {
+    // source: HoDoKu solving techniques: http://hodoku.sourceforge.net/en/tech_hidden.php#h3
+    ISquareSudokuGrid hiddenTriple =
+            new StandardSudokuGrid("5..62..37..489........5....93........2....6.57.......3.....9.........7..68.57...2");
+
+    ConstraintBasedSolver solver = new ConstraintBasedSolver(hiddenTriple);
+
+    boolean foundHiddenSetInColumn = solver.checkForHiddenSet(hiddenTriple, hiddenTriple.getColumnElements(3, 5));
+    assertTrue(foundHiddenSetInColumn);
+
+    ISquareSudokuGrid solved = solver.solve();
+    ISquareSudokuGrid solution =
+            new StandardSudokuGrid("519624837364897521872153469936715284421938675758462193147289356295346718683571942");
+
+    assertTrue(solved.isSolved());
+    assertEquals(solution.gridToString(), solved.gridToString());
+  }
+
+  @Test
   public void solveHiddenQuadInBox() throws Exception {
     // source: HoDoKu solving techniques: http://hodoku.sourceforge.net/en/tech_hidden.php#h4
     ISquareSudokuGrid hiddenQuad =
@@ -442,8 +480,8 @@ public class ConstraintBasedSolverTest {
         new StandardSudokuGrid(".41729.3.769..34.2.3264.7194.39..17.6.7..49.319537..24214567398376.9.541958431267");
 
     ConstraintBasedSolver solver = new ConstraintBasedSolver(xWing);
-    boolean foundXWing = solver.checkForXWingInRows(xWing, 5);
-    assertTrue(foundXWing);
+    boolean foundBasicFish = solver.checkForBasicFishInRows(xWing, 5, 2);
+    assertTrue(foundBasicFish);
 
     ISquareSudokuGrid solved = solver.solve();
     ISquareSudokuGrid solution =
@@ -460,8 +498,8 @@ public class ConstraintBasedSolverTest {
             new StandardSudokuGrid("98..62753.65..3...327.5...679..3.5...5...9...832.45..9673591428249.87..5518.2...7");
 
     ConstraintBasedSolver solver = new ConstraintBasedSolver(xWing);
-    boolean foundXWing = solver.checkForXWingInColumns(xWing, 1);
-    assertTrue(foundXWing);
+    boolean foundBasicFish = solver.checkForBasicFishInColumns(xWing, 1, 2);
+    assertTrue(foundBasicFish);
 
     ISquareSudokuGrid solved = solver.solve();
     ISquareSudokuGrid solution =
@@ -477,7 +515,7 @@ public class ConstraintBasedSolverTest {
     ISquareSudokuGrid swordfish =
             new StandardSudokuGrid("16.543.7..786.14354358.76.172.458.696..912.57...376..4.16.3..4.3...8..16..71645.3");
     ISquareSudokuGrid solution =
-            new StandardSudokuGrid("");
+            new StandardSudokuGrid("169543872278691435435827691723458169684912357951376284516239748342785916897164523");
 
     ConstraintBasedSolver solver = new ConstraintBasedSolver(swordfish);
     boolean foundSwordfish = solver.checkForBasicFishInRows(swordfish, 2, 3);
@@ -485,9 +523,58 @@ public class ConstraintBasedSolverTest {
     ISquareSudokuGrid solved = solver.solve();
 
     assertTrue(solved.isSolved());
-    System.out.println(solved.gridToString());
-    // TODO
-//    assertEquals(solution.gridToString(), solved.gridToString());
+    assertEquals(solution.gridToString(), solved.gridToString());
+  }
+
+  @Test
+  public void solveSwordfishInRows2() throws Exception {
+    // source: HoDoKu solving techniques: http://hodoku.sourceforge.net/en/tech_fishb.php#bf3
+    ISquareSudokuGrid swordfish =
+            new StandardSudokuGrid("1.85..2345..3.2178...8..5698..6.5793..59..4813....865298.2.631.......8.....78.9..");
+    ISquareSudokuGrid solution =
+            new StandardSudokuGrid("178569234569342178432871569841625793625937481397418652984256317753194826216783945");
+
+    ConstraintBasedSolver solver = new ConstraintBasedSolver(swordfish);
+    boolean foundSwordfish = solver.checkForBasicFishInRows(swordfish, 4, 3);
+    assertTrue(foundSwordfish);
+    ISquareSudokuGrid solved = solver.solve();
+
+    assertTrue(solved.isSolved());
+    assertEquals(solution.gridToString(), solved.gridToString());
+  }
+
+  @Test
+  public void solveJellyfishInRows() throws Exception {
+    // source: HoDoKu solving techniques: http://hodoku.sourceforge.net/en/tech_fishb.php#bf4
+    ISquareSudokuGrid jellyfish =
+            new StandardSudokuGrid("2.......3.8..3..5...34.21....12.54......9......93.86....25.69...9..2..7.4.......1");
+    ISquareSudokuGrid solution =
+            new StandardSudokuGrid("256819743184637259973452168831265497645791832729348615312576984598124376467983521");
+
+    ConstraintBasedSolver solver = new ConstraintBasedSolver(jellyfish);
+    boolean foundJellyfish = solver.checkForBasicFishInRows(jellyfish, 7, 4);
+    assertTrue(foundJellyfish);
+    ISquareSudokuGrid solved = solver.solve();
+
+    assertTrue(solved.isSolved());
+    assertEquals(solution.gridToString(), solved.gridToString());
+  }
+
+  @Test
+  public void solveJellyfishInRows2() throws Exception {
+    // source: HoDoKu solving techniques: http://hodoku.sourceforge.net/en/tech_fishb.php#bf4
+    ISquareSudokuGrid jellyfish =
+            new StandardSudokuGrid("2.41.358.....2.3411.34856..732954168..5.1.9..6198324....15.82..3..24.....263....4");
+    ISquareSudokuGrid solution =
+            new StandardSudokuGrid("294163587568729341173485692732954168485617923619832475941578236357246819826391754");
+
+    ConstraintBasedSolver solver = new ConstraintBasedSolver(jellyfish);
+    boolean foundJellyfish = solver.checkForBasicFishInRows(jellyfish, 7, 4);
+    assertTrue(foundJellyfish);
+    ISquareSudokuGrid solved = solver.solve();
+
+    assertTrue(solved.isSolved());
+    assertEquals(solution.gridToString(), solved.gridToString());
   }
 
   @Test
